@@ -1,3 +1,10 @@
+        ;; Set palette
+        move.l  #palette,-(sp)
+        move.w  #6,-(sp)        ; setpalette
+        trap    #14             ; XBIOS trap
+        addq.l  #2,sp
+
+        ;; Retrieve address of video memory
         move.w	#2,-(sp)        ; Physbase function call
         trap  	#14             ; Call XBIOS
         addq.l	#2,sp           ; Correct stack
@@ -22,6 +29,10 @@
 
 ;;; Variables
 phybase         DC.L    1
+
+palette:
+	dc.w $0666, $0000, $0100, $0312, $0524, $0746, $0000, $0111
+	dc.w $0343, $0575, $0777, $0332, $0776, $0577, $0233, $0000
 
 picture:
 	dc.w $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
