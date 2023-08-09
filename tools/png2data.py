@@ -42,7 +42,7 @@ def main():
     im = Image.open(fname)
     data = list(im.getdata())
     st_pic = process_image(data)
-    print("image_data")
+    print("picture:")
     print(render(st_pic))
     print("palette:")
     print(render(get_st_palette(im.getpalette()[:48])))

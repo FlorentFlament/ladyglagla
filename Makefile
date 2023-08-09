@@ -1,7 +1,7 @@
 all: hello.prg
 
-%.prg: %.s
-	vasmm68k_mot -Ftos $< -o $@
+hello.prg: hello.s picture-logo.s
+	vc -vv -nostdlib +tos -o $@ $^
 
 clean:
 	rm -f *.prg *.tos
