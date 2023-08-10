@@ -2,6 +2,7 @@
 	xref picture_logo_palette
 
 	section code,code
+main:
 	;; Get address of video memory
 	move.w	#2,-(sp)	; Physbase function call
 	trap	#14		; Call XBIOS
@@ -14,11 +15,10 @@
 	trap	#14		; XBIOS trap
 	addq.l	#6,sp
 
+        ;; Copy picture data to video memory
         move.l  #picture_logo_data,a1
-        move.w  #32000-4,d1         ; 4*63
+        move.w  #32000-4,d1
 .loop:
-        ;; 16bits words represent 16 consecutive bits
-        ;; 4 such words represent 4 bitplanes - encoding pixel colors
         move.l  (a1,d1.w),(a6,d1.w)
         sub.w   #4,d1
         bpl     .loop
