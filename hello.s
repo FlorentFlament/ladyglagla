@@ -1,6 +1,8 @@
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
+        xref picture_callisto_glafouk
+        xref picture_logo
 
 	section code
 main:
@@ -14,7 +16,10 @@ main:
 	trap      #14          ; Call XBIOS
 	addq.l    #6,sp        ; Correct stack
 
-        jsr picscratch_fx
+        lea     picture_callisto_glafouk,a0
+        jsr     picscratch_fx
+        lea     picture_logo,a0
+        jsr     picscratch_fx
 
         ;; Wait for any key press then return
 	move.w	#8,-(sp)	; Cnecin
@@ -32,25 +37,6 @@ main:
 
 	clr.w	-(sp)		; Pterm0
 	trap	#1		; GEMDOS
-
-;;; Shifts one line to the left
-;;; Address of beginning of line must be passed in a0
-;;; d0,d1,a1 are used
-line_shift_left::
-        move.w  #2,d1
-.bitplanes_loop:
-        move.w  #160,a1       ; 160 bytes per line
-        sub.w   d1,a1
-.rotate_loop:
-        roxl.w  (a0,a1)         ; Rotate video block
-        suba.w  #8,a1           ; Fix deplacement without updating SR flags
-        move.w  a1,d0           ; Move deplacement and test negativity
-        btst.l  #15,d0          ;
-        beq     .rotate_loop
-        addq.w  #2,d1
-        cmpi.w  #8,d1
-        ble     .bitplanes_loop
-        rts
 
 set_music_player_vbl:
 	move    sr,-(sp)

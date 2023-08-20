@@ -1,7 +1,11 @@
-        xref picture_callisto_glafouk
         xdef picscratch_fx
 
+;;; a0 must contain address of picture
+;;; All registers are saved then restored
 picscratch_fx:
+        movem.l d0-d7/a0-a7,-(sp)
+        move.l  a0,a5
+
         ;; Get address of video memory
 	move.w	#2,-(sp)	; Physbase function call
 	trap	#14		; Call XBIOS
@@ -9,7 +13,7 @@ picscratch_fx:
 	move.l	d0,a6		; Save physical screen ram base in a6
 
 	;; Set picture palette
-	move.l	#picture_callisto_glafouk,-(sp)
+	move.l	a5,-(sp)
 	move.w	#6,-(sp)	; setpalette
 	trap	#14		; XBIOS trap
 	addq.l	#6,sp
@@ -19,7 +23,8 @@ picscratch_fx:
 
         ;; Copy picture data to video memory
         ;; Data starts after palette, i.e 32bytes after start of data
-        move.l  #picture_callisto_glafouk+32,a1
+        move.l  #32,a1
+        add.l   a5,a1
         move.w  #32000-4,d0
 .pic_loop:
         move.l  (a1,d0.w),(a6,d0.w)
@@ -53,4 +58,24 @@ picscratch_fx:
         jsr     line_shift_left
         dbra    d7,.line_loop
 
+        movem.l (sp)+,d0-d7/a0-a7
+        rts
+
+;;; Shifts one line to the left
+;;; Address of beginning of line must be passed in a0
+;;; d0,d1,a1 are used
+line_shift_left:
+        move.w  #2,d1
+.bitplanes_loop:
+        move.w  #160,a1       ; 160 bytes per line
+        sub.w   d1,a1
+.rotate_loop:
+        roxl.w  (a0,a1)         ; Rotate video block
+        suba.w  #8,a1           ; Fix deplacement without updating SR flags
+        move.w  a1,d0           ; Move deplacement and test negativity
+        btst.l  #15,d0          ;
+        beq     .rotate_loop
+        addq.w  #2,d1
+        cmpi.w  #8,d1
+        ble     .bitplanes_loop
         rts

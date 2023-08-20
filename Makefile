@@ -10,7 +10,10 @@ PlayerAky.o: PlayerAky.s
 music-data.o: music-data.s vorzugleetch.s
 	vasmm68k_mot -nowarn=58 -align -spaces -noesc -no-opt -Faout -o $@ $<
 
-hello.prg: hello.o picture-callisto-glafouk.o PlayerAky.o music-data.o picscratch-fx.o
+hello.prg: hello.o picscratch-fx.o \
+PlayerAky.o music-data.o \
+picture-callisto-glafouk.o \
+picture-logo.o
 	vc -v -g -nostdlib +tos -o $@ $^
 
 %.o: %.s
