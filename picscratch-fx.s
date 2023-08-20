@@ -18,9 +18,6 @@ picscratch_fx:
 	trap	#14		; XBIOS trap
 	addq.l	#6,sp
 
-        ;; Hide mouse with a line A function
-        dc.w    $A00A
-
         ;; Copy picture data to video memory
         ;; Data starts after palette, i.e 32bytes after start of data
         move.l  #32,a1
@@ -31,10 +28,10 @@ picscratch_fx:
         subq.w  #4,d0
         bpl     .pic_loop
 
-        ;; Wait for any key press then return
-	move.w	#8,-(sp)	; Cnecin
-	trap	#1		; GEMDOS
-        addq.l	#2,sp
+        ;; Wait loop
+        move.l  #600,-(sp)
+        jsr     wait_hz_200
+        addq.l  #4,sp
 
         move.w  #5000-1,d7      ; Rotate 5000 lines
         ;; Rotate one line
@@ -78,4 +75,41 @@ line_shift_left:
         addq.w  #2,d1
         cmpi.w  #8,d1
         ble     .bitplanes_loop
+        rts
+
+;;; Wait loop: argument is 200th of second
+;;; Passed on the stack for fun
+;;; 8(sp) to access the argument ??
+;;; Uses d3
+wait_hz_200::
+        move.l  d3,-(sp)        ; Save registers content
+
+	pea       get_hz_200
+	move.w    #38,-(sp)    ; Supexec function call
+	trap      #14          ; Call XBIOS
+	addq.l    #6,sp        ; Correct stack
+        ;; d0 has the value of hz_200 timer
+        move.l  d0,d3
+        add.l   8(sp),d3        ; Store target time in d3
+
+.wait_loop:
+	pea       get_hz_200
+	move.w    #38,-(sp)    ; Supexec function call
+	trap      #14          ; Call XBIOS
+	addq.l    #6,sp        ; Correct stack
+        cmp.l   d0,d3
+        bge     .wait_loop      ; Loop until d0 >= d3, delay has elapsed
+
+        move.l  (sp)+,d3        ; Restore registers content
+        rts
+
+;;; To be called by Supexec
+;;; returns the content of the 200 Hz timer in d0. It's 32 bits long
+;;; https://freemint.github.io/tos.hyp/en/bios_sysvars.html
+get_hz_200:
+        ;; TOS maintains a system variable at $0004ba traditionally
+        ;; named hz_200. This is a counter that is incremented 200
+        ;; times per second, controlled by Timer C on the timer chip
+        ;; source: https://bumbershootsoft.wordpress.com/2021/05/29/timing-on-the-atari-st/
+        move.l  $0004ba,d0
         rts

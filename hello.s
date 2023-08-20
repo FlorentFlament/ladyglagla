@@ -6,6 +6,9 @@
 
 	section code
 main:
+        ;; Hide mouse with a line A function
+        dc.w    $A00A
+
         ;; Initialize music player
 	lea     music_data,a0
 	jsr     PLY_AKYst_Start+0           ;init player and tune
@@ -16,10 +19,12 @@ main:
 	trap      #14          ; Call XBIOS
 	addq.l    #6,sp        ; Correct stack
 
+.main_loop:
         lea     picture_callisto_glafouk,a0
         jsr     picscratch_fx
         lea     picture_logo,a0
         jsr     picscratch_fx
+        bra     .main_loop
 
         ;; Wait for any key press then return
 	move.w	#8,-(sp)	; Cnecin
@@ -46,7 +51,7 @@ set_music_player_vbl:
 	move    (sp)+,sr        ; Enable interrupts
         rts
 
-vbl::
+vbl:
 	movem.l d0-a6,-(sp)
 	lea     music_data,a0           ;tell the player where to find the tune start
 	jsr     PLY_AKYst_Start+2       ;play that funky music
