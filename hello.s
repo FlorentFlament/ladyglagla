@@ -1,5 +1,5 @@
-	xref picture_logo_data
-	xref picture_logo_palette
+	xref picture_callisto_glafouk_data
+	xref picture_callisto_glafouk_palette
         xref PLY_AKYst_Start
         xref music_data
 
@@ -22,7 +22,7 @@ main:
 	move.l	d0,a6		; Save physical screen ram base in a6
 
 	;; Set picture palette
-	move.l	#picture_logo_palette,-(sp)
+	move.l	#picture_callisto_glafouk_palette,-(sp)
 	move.w	#6,-(sp)	; setpalette
 	trap	#14		; XBIOS trap
 	addq.l	#6,sp
@@ -31,7 +31,7 @@ main:
         dc.w    $A00A
 
         ;; Copy picture data to video memory
-        move.l  #picture_logo_data,a1
+        move.l  #picture_callisto_glafouk_data,a1
         move.w  #32000-4,d0
 .pic_loop:
         move.l  (a1,d0.w),(a6,d0.w)
