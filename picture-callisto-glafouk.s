@@ -1,7 +1,10 @@
-	xdef picture_callisto_glafouk_data
-	xdef picture_callisto_glafouk_palette
+	xdef picture_callisto_glafouk
 
         section picture_callisto_glafouk,data
+picture_callisto_glafouk:
+picture_callisto_glafouk_palette:
+	dc.w $0777, $0000, $0310, $0210, $0522, $0776, $0567, $0137
+	dc.w $0465, $0340, $0774, $0555, $0664, $0653, $0012, $0000
 picture_callisto_glafouk_data:
 	dc.w $ffff, $ffff, $0000, $ffff, $ffff, $ffff, $0000, $ffff
 	dc.w $ffff, $fff1, $0000, $fff1, $ffff, $ffff, $0000, $ffff
@@ -2003,6 +2006,3 @@ picture_callisto_glafouk_data:
 	dc.w $0002, $fffd, $fffd, $fffd, $1f0c, $ffff, $ffff, $ffff
 	dc.w $1c00, $ffff, $ffff, $ffff, $0000, $ffff, $ffff, $ffff
 	dc.w $0000, $ffff, $ffff, $ffff, $0000, $ffff, $ffff, $ffff
-picture_callisto_glafouk_palette:       
-	dc.w $0777, $0000, $0310, $0210, $0522, $0776, $0567, $0137
-	dc.w $0465, $0340, $0774, $0555, $0664, $0653, $0012, $0000
