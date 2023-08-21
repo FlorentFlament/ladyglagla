@@ -3,30 +3,46 @@
 ;;; a0 must contain address of picture
 ;;; All registers are saved then restored
 picscratch_fx:
+        ;; d6 - physical screen address
+        ;; d5 - base picture address
         movem.l d0-d7/a0-a7,-(sp)
-        move.l  a0,a5
+        move.l  a0,d5
 
         ;; Get address of video memory
 	move.w	#2,-(sp)	; Physbase function call
 	trap	#14		; Call XBIOS
 	addq.l	#2,sp
-	move.l	d0,a6		; Save physical screen ram base in a6
+	move.l	d0,d6		; Save physical screen ram base in d6
 
 	;; Set picture palette
-	move.l	a5,-(sp)
+	move.l	d5,-(sp)
 	move.w	#6,-(sp)	; setpalette
 	trap	#14		; XBIOS trap
 	addq.l	#6,sp
 
         ;; Copy picture data to video memory
         ;; Data starts after palette, i.e 32bytes after start of data
-        move.l  #32,a1
-        add.l   a5,a1
-        move.w  #32000-4,d0
-.pic_loop:
-        move.l  (a1,d0.w),(a6,d0.w)
+        add.l   #32,d5
+        move.l  d5,a5
+        move.l  d6,a6           ; d5 and d6 point to lines to draw
+        add.l   #32000-320,a5         ; 160 bytes per line,
+        add.l   #32000-320,a6         ; 2 lines at a time
+.picdisplay_loop:
+
+        move.w  #320-4,d0       ; 160 bytes per line, 2 lines at a time
+.picdisplay_line_loop:
+        move.l  (a5,d0.w),(a6,d0.w)
         subq.w  #4,d0
-        bpl     .pic_loop
+        bpl     .picdisplay_line_loop
+
+        ;; Wait loop
+        move.l  #1,d3
+        jsr     wait_hz_200
+
+        sub.l   #320,a5
+        sub.l   #320,a6
+        cmp.l   d5,a5
+        bge     .picdisplay_loop
 
         ;; Wait loop
         move.l  #600,d3
@@ -49,7 +65,7 @@ picscratch_fx:
         move.w  d0,a0
         asl.w   #2,d0           ; *128
         add.w   d0,a0           ; *160
-        add.l   a6,a0
+        add.l   d6,a0
 
         jsr     line_shift_left
         dbra    d7,.line_loop
