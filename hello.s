@@ -3,6 +3,8 @@
         xref picscratch_fx
         xref picture_callisto_glafouk
         xref picture_logo
+        xref textwriter
+        xref wait_hz_200
 
 	section code
 main:
@@ -22,6 +24,12 @@ main:
 .main_loop:
         lea     picture_callisto_glafouk,a0
         jsr     picscratch_fx
+
+        jsr     textwriter
+        ;; Wait loop
+        move.l  #600,d3
+        jsr     wait_hz_200
+
         lea     picture_logo,a0
         jsr     picscratch_fx
         bra     .main_loop

@@ -10,7 +10,7 @@ PlayerAky.o: PlayerAky.s
 music-data.o: music-data.s vorzugleetch.s
 	vasmm68k_mot -nowarn=58 -align -spaces -noesc -no-opt -Faout -o $@ $<
 
-hello.prg: hello.o picscratch-fx.o \
+hello.prg: hello.o picscratch-fx.o textwriter.o utils.o \
 PlayerAky.o music-data.o \
 picture-callisto-glafouk.o \
 picture-logo.o
@@ -18,11 +18,6 @@ picture-logo.o
 
 %.o: %.s
 	vasmm68k_mot -Faout -o $@ $^
-
-# Not used anymore
-# # Remove spaces in assembly file
-# %-fixed.s: %.s
-# 	cat $< | sed "s/ *+ */+/g" | sed "s/ *- */-/g" | sed "s/ *, */,/g" > $@
 
 clean:
 	rm -f *.prg *.tos *-fixed.s *.o
