@@ -37,6 +37,11 @@ main:
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
         jsr     picscratch_fx
+        lea     text_credits,a0
+        jsr     textwriter
+        move.l  #600,d3         ; wait
+        jsr     wait_hz_200
+        jsr     picscratch_fx
         bra     .main_loop
 
         ;; Wait for any key press then return
@@ -83,6 +88,13 @@ restore_vbl:
 text_glafouk:
         dc.b    $1b,'Y',' '+5,' '+14,"Hey, hey !",13,10
         dc.b    $1b,'Y',' '+6,' '+14,"Have you seen my t-shirt ?",13,10
+        dc.b    0
+
+text_credits:
+        dc.b    $1b,'Y',' '+9,' '+16,"Credits:",13,10
+        dc.b    $1b,'Y',' '+11,' '+6,"Graphics: Yogib33r / Callisto",13,10
+        dc.b    $1b,'Y',' '+13,' '+13,"Music: Glafouk",13,10
+        dc.b    $1b,'Y',' '+15,' '+14,"Code: Flewww",13,10
         dc.b    0
 
         section bss
