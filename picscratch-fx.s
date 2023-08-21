@@ -29,9 +29,8 @@ picscratch_fx:
         bpl     .pic_loop
 
         ;; Wait loop
-        move.l  #600,-(sp)
+        move.l  #600,d3
         jsr     wait_hz_200
-        addq.l  #4,sp
 
         move.w  #5000-1,d7      ; Rotate 5000 lines
         ;; Rotate one line
@@ -77,20 +76,16 @@ line_shift_left:
         ble     .bitplanes_loop
         rts
 
-;;; Wait loop: argument is 200th of second
-;;; Passed on the stack for fun
-;;; 8(sp) to access the argument ??
-;;; Uses d3
+;;; Wait loop: argument is 200th of second passed in d3
+;;; d3 will be destroyed
+;;; d0-d2/a0-a2 will be scratched
 wait_hz_200::
-        move.l  d3,-(sp)        ; Save registers content
-
 	pea       get_hz_200
 	move.w    #38,-(sp)    ; Supexec function call
 	trap      #14          ; Call XBIOS
 	addq.l    #6,sp        ; Correct stack
         ;; d0 has the value of hz_200 timer
-        move.l  d0,d3
-        add.l   8(sp),d3        ; Store target time in d3
+        add.l   d0,d3
 
 .wait_loop:
 	pea       get_hz_200
@@ -100,7 +95,6 @@ wait_hz_200::
         cmp.l   d0,d3
         bge     .wait_loop      ; Loop until d0 >= d3, delay has elapsed
 
-        move.l  (sp)+,d3        ; Restore registers content
         rts
 
 ;;; To be called by Supexec
