@@ -1,10 +1,11 @@
         xref wait_hz_200
 
+        xdef picdisplay
         xdef picscratch_fx
 
 ;;; a0 must contain address of picture
 ;;; All registers are saved then restored
-picscratch_fx:
+picdisplay:
         ;; d6 - physical screen address
         ;; d5 - base picture address
         movem.l d0-d7/a0-a7,-(sp)
@@ -46,9 +47,17 @@ picscratch_fx:
         cmp.l   d5,a5
         bge     .picdisplay_loop
 
-        ;; Wait loop
-        move.l  #600,d3
-        jsr     wait_hz_200
+        movem.l (sp)+,d0-d7/a0-a7
+        rts
+
+picscratch_fx:
+        movem.l d0-d7/a0-a7,-(sp)
+
+        ;; Get address of video memory
+	move.w	#2,-(sp)	; Physbase function call
+	trap	#14		; Call XBIOS
+	addq.l	#2,sp
+	move.l	d0,d6		; Save physical screen ram base in d6
 
         move.w  #5000-1,d7      ; Rotate 5000 lines
         ;; Rotate one line
@@ -70,7 +79,7 @@ picscratch_fx:
         add.l   d6,a0
 
         jsr     line_shift_left
-        dbra    d7,.line_loop
+        dbra    d7,.line_loop   ; <- bug
 
         movem.l (sp)+,d0-d7/a0-a7
         rts

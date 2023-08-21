@@ -1,6 +1,7 @@
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
+        xref picdisplay
         xref picture_callisto_glafouk
         xref picture_logo
         xref textwriter
@@ -23,14 +24,17 @@ main:
 
 .main_loop:
         lea     picture_callisto_glafouk,a0
-        jsr     picscratch_fx
-
-        jsr     textwriter
-        ;; Wait loop
-        move.l  #600,d3
+        jsr     picdisplay
+        move.l  #200,d3         ; wait
         jsr     wait_hz_200
-
+        jsr     textwriter
+        move.l  #600,d3         ; wait
+        jsr     wait_hz_200
+        jsr     picscratch_fx
         lea     picture_logo,a0
+        jsr     picdisplay
+        move.l  #600,d3         ; wait
+        jsr     wait_hz_200
         jsr     picscratch_fx
         bra     .main_loop
 
