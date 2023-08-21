@@ -1,10 +1,24 @@
+        xref wait_hz_200
         xdef textwriter
 
 textwriter:
-        pea     text_data
-        move.w  #9,-(sp)        ; Cconws
+        lea     text_data,a3
+
+.loop:
+        move.b  (a3),d3
+        beq     .end            ; finish if character \0 encountered
+
+        move.w  d3,-(sp)
+        move.w  #2,-(sp)        ; Cconout
         trap    #1              ; Gemdos trap
-        addq.l  #6,sp
+        addq.l  #4,sp
+
+        move.l  #10,d3
+        jsr     wait_hz_200
+        add.l   #1,a3
+        bra     .loop
+
+.end:
         rts
 
         section text_data,data
