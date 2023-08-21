@@ -86,15 +86,23 @@ restore_vbl:
 
         section text_data,data
 text_glafouk:
-        dc.b    $1b,'Y',' '+5,' '+14,"Hey, hey !",13,10
-        dc.b    $1b,'Y',' '+6,' '+14,"Have you seen my t-shirt ?",13,10
+        ;; Beware ! Need to add ' ' to the color to make it work !
+        ;; Otherwise, behaviour is TOS dependant !
+        dc.b    $1b,'c',' '+0   ; set background color to black
+        dc.b    $1b,'b',' '+1       ; set foreground color to red
+        dc.b    $1b,'Y',' '+5,' '+14,"Hey, hey !"
+        dc.b    $1b,'Y',' '+6,' '+14,"Have you seen my t-shirt ?"
         dc.b    0
 
 text_credits:
-        dc.b    $1b,'Y',' '+9,' '+16,"Credits:",13,10
-        dc.b    $1b,'Y',' '+11,' '+6,"Graphics: Yogib33r / Callisto",13,10
-        dc.b    $1b,'Y',' '+13,' '+13,"Music: Glafouk",13,10
-        dc.b    $1b,'Y',' '+15,' '+14,"Code: Flewww",13,10
+        ;; colors are based on Flush logo palette
+        dc.b    $1b,'c',' '+1       ; set background color to black
+        dc.b    $1b,'b',' '+12       ; set foreground color to red
+        dc.b    $1b,'Y',' '+10,' '+6,"Graphics: Yogib33r / Callisto"
+        dc.b    $1b,'b',' '+5       ; set color to yellow
+        dc.b    $1b,'Y',' '+12,' '+13,"Music: Glafouk"
+        dc.b    $1b,'b',' '+9            ; set foreground color to green
+        dc.b    $1b,'Y',' '+14,' '+14,"Code: Flewww"
         dc.b    0
 
         section bss
