@@ -27,6 +27,7 @@ main:
         jsr     picdisplay
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
+        lea     text_glafouk,a0
         jsr     textwriter
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
@@ -77,6 +78,12 @@ restore_vbl:
 	move.l  old_vbl,$70.w           ;restore vbl
 	move    (sp)+,sr                ;enable interrupts - tune will stop playing
 	rts
+
+        section text_data,data
+text_glafouk:
+        dc.b    $1b,'Y',' '+5,' '+14,"Hey, hey !",13,10
+        dc.b    $1b,'Y',' '+6,' '+14,"Have you seen my t-shirt ?",13,10
+        dc.b    0
 
         section bss
         ;; Put variables here

@@ -1,8 +1,12 @@
         xref wait_hz_200
         xdef textwriter
 
+;;; a0 Address of text to write - will be overwritten
+;;; as d0-d2/a0-d2
+;;; Text to write must end with character \0
 textwriter:
-        lea     text_data,a3
+        movem.l a3/d3,-(sp)
+        move.l  a0,a3
 
 .loop:
         move.b  (a3),d3
@@ -19,10 +23,5 @@ textwriter:
         bra     .loop
 
 .end:
+        movem.l (sp)+,a3/d3
         rts
-
-        section text_data,data
-text_data:
-        dc.b    $1b,'Y',' '+5,' '+14,"Hey, Hey !",13,10
-        dc.b    $1b,'Y',' '+6,' '+14,"Have you seen my t-shirt ?",13,10
-        dc.b    0
