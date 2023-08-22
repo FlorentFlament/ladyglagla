@@ -27,7 +27,11 @@ main:
         jsr     picdisplay
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
-        lea     text_glafouk,a0
+        lea     text_glafouk_1,a0
+        jsr     textwriter
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
+        lea     text_glafouk_2,a0
         jsr     textwriter
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
@@ -85,7 +89,7 @@ restore_vbl:
 	rts
 
         section text_data,data
-text_glafouk:
+text_glafouk_1:
         ;; Beware ! Need to add ' ' to the color to make it work !
         ;; Otherwise, behaviour is TOS dependant !
         dc.b    $1b,'c',' '+0   ; set background color to black
@@ -93,6 +97,17 @@ text_glafouk:
         dc.b    $1b,'Y',' '+5,' '+14,"Hey, hey !"
         dc.b    $1b,'Y',' '+6,' '+14,"Have you seen my t-shirt ?"
         dc.b    0
+text_glafouk_2:
+        dc.b	$1b,'Y',' '+7,' '+14,"No ?"
+        dc.b	$1b,'Y',' '+8,' '+14,"But it's coz it's"
+        dc.b	$1b,'Y',' '+9,' '+14,"under my sweatshirt..."
+        dc.b	$1b,'Y',' '+10,' '+14,"To see it, I'll have"
+        dc.b	$1b,'Y',' '+11,' '+14,"to undress a bit..."
+        dc.b	$1b,'Y',' '+12,' '+14,"Wanna play strip p0ke(r)"
+        dc.b	$1b,'Y',' '+13,' '+14,"and see my..."
+        dc.b	$1b,'Y',' '+14,' '+14,"poke her face ?"
+        dc.b    0
+
 
 text_credits:
         ;; colors are based on Flush logo palette
