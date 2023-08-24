@@ -2,6 +2,7 @@
         xref music_data
         xref picscratch_fx
         xref picdisplay
+        xref picerase
         xref picture_callisto_glafouk
         xref picture_logo
         xref textwriter
@@ -23,6 +24,9 @@ main:
 	addq.l    #6,sp        ; Correct stack
 
 .main_loop:
+        jsr     picerase
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
         lea     picture_callisto_glafouk,a0
         jsr     picdisplay
         move.l  #200,d3         ; wait
@@ -36,6 +40,9 @@ main:
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
         jsr     picscratch_fx
+        jsr     picerase
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
         lea     picture_logo,a0
         jsr     picdisplay
         move.l  #600,d3         ; wait

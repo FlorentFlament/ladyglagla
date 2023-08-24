@@ -1,9 +1,10 @@
         xref wait_hz_200
 
         xdef picdisplay
+        xdef picerase
         xdef picscratch_fx
 
-DISPLAY_STEP = 1280
+DISPLAY_STEP = 8*160
 
 ;;; a0 must contain address of picture
 ;;; All registers are saved then restored
@@ -47,6 +48,39 @@ picdisplay:
         sub.l   #DISPLAY_STEP,a5
         sub.l   #DISPLAY_STEP,a6
         cmp.l   d5,a5
+        bge     .picdisplay_loop
+
+        movem.l (sp)+,d0-d7/a0-a7
+        rts
+
+;;; All registers are saved then restored
+;;; Erases the screen
+picerase:
+        ;; d6 - physical screen address
+        movem.l d0-d7/a0-a7,-(sp)
+
+        ;; Get address of video memory
+	move.w	#2,-(sp)	; Physbase function call
+	trap	#14		; Call XBIOS
+	addq.l	#2,sp
+	move.l	d0,d6		; Save physical screen ram base in d6
+
+        move.l  d6,a6           ; d6 point to lines to draw
+        add.l   #32000-DISPLAY_STEP,a6         ; n lines at a time
+.picdisplay_loop:
+
+        move.w  #DISPLAY_STEP-4,d0
+.picdisplay_line_loop:
+        move.l  #0,(a6,d0.w)
+        subq.w  #4,d0
+        bpl     .picdisplay_line_loop
+
+        ;; Wait loop
+        move.l  #1,d3
+        jsr     wait_hz_200
+
+        sub.l   #DISPLAY_STEP,a6
+        cmp.l   d6,a6
         bge     .picdisplay_loop
 
         movem.l (sp)+,d0-d7/a0-a7
