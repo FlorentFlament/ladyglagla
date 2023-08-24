@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from PIL import Image
+from asmlib import render
 
 BLOCK_SIZE = 16 # 16 pixels blocks
 BIT_PLANES = 4
@@ -17,19 +18,6 @@ def process_image(data):
     blocks = [data[i:i+BLOCK_SIZE] for i in range(0, len(data), BLOCK_SIZE)]
     # Processing blocks and building flatten output
     return [i for b in blocks for i in process_block(b)]
-
-def render(data, perline=8):
-    """Renders a array of words to be used by a program."""
-    res = []
-    for i,v in enumerate(data):
-        if i%perline == 0:
-            if i != 0:
-                res.append('\n')
-            res.append('\tdc.w ')
-        else:
-            res.append(', ')
-        res.append("${:04x}".format(v))
-    return ''.join(res)
 
 def get_st_palette(rgb_palette):
     st_palette = []

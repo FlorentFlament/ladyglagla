@@ -2,6 +2,8 @@
         xref music_data
         xref picscratch_fx
         xref picdisplay
+        xref picdisplay_stretched
+        xref picgum_fx
         xref picerase
         xref picture_callisto_glafouk
         xref picture_logo
@@ -46,6 +48,10 @@ main:
         lea     picture_logo,a0
         jsr     picdisplay
         move.l  #600,d3         ; wait
+        jsr     wait_hz_200
+        lea     picture_logo,a5
+        jsr     picgum_fx
+        move.l  #200,d3         ; wait
         jsr     wait_hz_200
         jsr     picscratch_fx
         lea     text_credits,a0
