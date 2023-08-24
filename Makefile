@@ -21,3 +21,6 @@ picture-logo.o
 
 clean:
 	rm -f *.prg *.tos *-fixed.s *.o
+
+run:
+	hatari --fast-boot true hello.prg

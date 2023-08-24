@@ -3,6 +3,8 @@
         xdef picdisplay
         xdef picscratch_fx
 
+DISPLAY_STEP = 1280
+
 ;;; a0 must contain address of picture
 ;;; All registers are saved then restored
 picdisplay:
@@ -28,11 +30,11 @@ picdisplay:
         add.l   #32,d5
         move.l  d5,a5
         move.l  d6,a6           ; d5 and d6 point to lines to draw
-        add.l   #32000-320,a5         ; 160 bytes per line,
-        add.l   #32000-320,a6         ; 2 lines at a time
+        add.l   #32000-DISPLAY_STEP,a5         ; 160 bytes per line,
+        add.l   #32000-DISPLAY_STEP,a6         ; 2 lines at a time
 .picdisplay_loop:
 
-        move.w  #320-4,d0       ; 160 bytes per line, 2 lines at a time
+        move.w  #DISPLAY_STEP-4,d0       ; 160 bytes per line, 2 lines at a time
 .picdisplay_line_loop:
         move.l  (a5,d0.w),(a6,d0.w)
         subq.w  #4,d0
@@ -42,8 +44,8 @@ picdisplay:
         move.l  #1,d3
         jsr     wait_hz_200
 
-        sub.l   #320,a5
-        sub.l   #320,a6
+        sub.l   #DISPLAY_STEP,a5
+        sub.l   #DISPLAY_STEP,a6
         cmp.l   d5,a5
         bge     .picdisplay_loop
 
