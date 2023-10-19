@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-import sys
+import argparse
 from PIL import Image
 from asmlib import render
 
 BLOCK_SIZE = 16 # 16 pixels blocks
-BIT_PLANES = 4
 
-def process_block(inblock):
-    outblock = [0]*4 # output block consists of 4 16bits words
+def process_block(inblock, bitplanes):
+    """
+    bitplanes determines the number of colors: 2**bitplanes
+    """
+    outblock = [0]*bitplanes # output block consists of bitplanes 16bits words
     for i in range(BLOCK_SIZE):
-        for j in range(BIT_PLANES):
+        for j in range(bitplanes):
             outblock[j] |= ((inblock[i] >> j) & 0x01) << (BLOCK_SIZE-1 - i)
     return outblock
 
-def process_image(data):
+def process_image(data, bitplanes):
+    """
+    bitplanes determines the number of colors: 2**bitplanes
+    """
     # Isolating blocks of 16 bytes
     blocks = [data[i:i+BLOCK_SIZE] for i in range(0, len(data), BLOCK_SIZE)]
     # Processing blocks and building flatten output
-    return [i for b in blocks for i in process_block(b)]
+    return [i for b in blocks for i in process_block(b, bitplanes)]
 
 def get_st_palette(rgb_palette):
     st_palette = []
@@ -26,10 +31,16 @@ def get_st_palette(rgb_palette):
     return st_palette
 
 def main():
-    fname = sys.argv[1]
-    im = Image.open(fname)
+    parser = argparse.ArgumentParser(
+        prog='png2data',
+        description='Converts a PNG image into Atari ST assembly data')
+    parser.add_argument('filename')
+    parser.add_argument('-b', '--bitplanes', help='bitplanes count', type=int, choices=range(1,5), default=4)
+
+    args = parser.parse_args()
+    im = Image.open(args.filename)
     data = list(im.getdata())
-    st_pic = process_image(data)
+    st_pic = process_image(data, args.bitplanes)
     print("picture:")
     print(render(st_pic))
     print("palette:")

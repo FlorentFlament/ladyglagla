@@ -1,12 +1,14 @@
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
+        xref movepic_monochrome
         xref picdisplay
         xref picdisplay_stretched
         xref picgum_fx
         xref picerase
         xref picture_callisto_glafouk
         xref picture_logo
+        xref glagla_pic01
         xref textwriter
         xref wait_hz_200
 
@@ -26,6 +28,22 @@ main:
 	addq.l    #6,sp        ; Correct stack
 
 .main_loop:
+        jsr     picerase
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
+
+        ;; testing new function
+        ;; Get address of video memory
+	move.w	#2,-(sp)	; Physbase function call
+	trap	#14		; Call XBIOS
+	addq.l	#2,sp
+	move.l	d0,a4		; Save physical screen ram base in a4
+
+        lea     glagla_pic01,a3
+        jsr     movepic_monochrome
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
+
         jsr     picerase
         move.l  #200,d3         ; wait
         jsr     wait_hz_200

@@ -1,6 +1,7 @@
 ;;; Basic picture display subroutines
         xref wait_hz_200
 
+        xdef movepic_monochrome
         xdef picdisplay
         xdef picerase
 
@@ -85,6 +86,60 @@ picerase:
         sub.l   #DISPLAY_STEP,a6
         cmp.l   d6,a6
         bge     .picdisplay_loop
+
+        movem.l (sp)+,d0-d7/a0-a7
+        rts
+
+;;; arguments
+;;; a3 address of picture
+;;; a4 address of where picture needs to be writen
+;;; All registers are saved then restored
+movepic_16colors:
+        ;; d6 - physical screen address
+        ;; d5 - base picture address
+        movem.l d0-d7/a0-a7,-(sp)
+
+	;; Set picture palette
+	move.l	a3,-(sp)
+	move.w	#6,-(sp)	; setpalette
+	trap	#14		; XBIOS trap
+	addq.l	#6,sp
+
+        ;; Copy picture data to video memory
+        ;; Data starts after palette, i.e 32bytes after start of data
+        add.l   #32,a3
+        move.w  #32000-4,d3       ; Move long ints (4 bytes)
+.move_loop:                   ; Move a DISPLAY_STEP block 4 bytes at a time
+        move.l  (a3,d3.w),(a4,d3.w)
+        subq.w  #4,d3
+        bpl     .move_loop
+
+        movem.l (sp)+,d0-d7/a0-a7
+        rts
+
+;;; arguments
+;;; a3 address of picture
+;;; a4 address of where picture needs to be writen
+;;; All registers are saved then restored
+movepic_monochrome:
+        movem.l d0-d7/a0-a7,-(sp)
+
+	;; Set picture palette
+	move.l	a3,-(sp)
+	move.w	#6,-(sp)	; setpalette
+	trap	#14		; XBIOS trap
+	addq.l	#6,sp
+
+        ;; Copy picture data to video memory
+        ;; Data starts after palette, i.e 32bytes after start of data
+        add.l   #32,a3
+        move.l  #16000-4,d3     ; Move every long (4 bytes shift) from picture
+        move.l  #32000-8,d4     ; Move 1 long out of 2 in (8 bytes shift) on video ram
+.move_loop:
+        move.l  (a3,d3.w),(a4,d4.w)
+        subq.w  #4,d3
+        subq.w  #8,d4
+        bpl     .move_loop
 
         movem.l (sp)+,d0-d7/a0-a7
         rts
