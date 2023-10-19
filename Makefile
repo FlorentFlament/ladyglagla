@@ -1,4 +1,4 @@
-all: hello.prg
+all: main.prg
 
 # TODO: Replace the vc that does everything by vasm per .s file
 # Here are the flags required for the song file and maybe the player
@@ -10,7 +10,7 @@ PlayerAky.o: PlayerAky.s
 music-data.o: music-data.s vorzugleetch.s
 	vasmm68k_mot -nowarn=58 -align -spaces -noesc -no-opt -Faout -o $@ $<
 
-hello.prg: hello.o picscratch-fx.o textwriter.o utils.o \
+main.prg: main.o picscratch-fx.o textwriter.o utils.o \
 PlayerAky.o music-data.o \
 picture-callisto-glafouk.o \
 picture-logo.o
@@ -22,5 +22,5 @@ picture-logo.o
 clean:
 	rm -f *.prg *.tos *-fixed.s *.o
 
-run: hello.prg
-	hatari --fast-boot true hello.prg
+run: main.prg
+	hatari --fast-boot true main.prg
