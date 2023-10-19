@@ -4,20 +4,20 @@
 ;;; d3 will be destroyed
 ;;; d0-d2/a0-a2 will be scratched
 wait_hz_200:
-	pea       get_hz_200
-	move.w    #38,-(sp)    ; Supexec function call
-	trap      #14          ; Call XBIOS
-	addq.l    #6,sp        ; Correct stack
+	pea     get_hz_200
+	move.w  #38,-(sp)    ; Supexec function call
+	trap    #14          ; Call XBIOS
+	addq.l  #6,sp        ; Correct stack
         ;; d0 has the value of hz_200 timer
-        add.l   d0,d3
+        add.l   d0,d3        ; Compute end time in d3
 
 .wait_loop:
-	pea       get_hz_200
-	move.w    #38,-(sp)    ; Supexec function call
-	trap      #14          ; Call XBIOS
-	addq.l    #6,sp        ; Correct stack
-        cmp.l   d0,d3
-        bge     .wait_loop      ; Loop until d0 >= d3, delay has elapsed
+	pea     get_hz_200
+	move.w  #38,-(sp)    ; Supexec function call
+	trap    #14          ; Call XBIOS
+	addq.l  #6,sp        ; Correct stack
+        cmp.l   d0,d3        ; Check whether we've reached end time
+        bge     .wait_loop   ; Loop until d0 >= d3, delay has elapsed
 
         rts
 

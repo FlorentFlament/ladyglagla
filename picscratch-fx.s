@@ -6,6 +6,8 @@
         xdef picscratch_fx
         xdef picgum_fx
 
+;;; 160 bytes per line
+;;; 8 lines at a time
 DISPLAY_STEP = 8*160
 
 ;;; a0 must contain address of picture
@@ -31,20 +33,20 @@ picdisplay:
         ;; Copy picture data to video memory
         ;; Data starts after palette, i.e 32bytes after start of data
         add.l   #32,d5
-        move.l  d5,a5
-        move.l  d6,a6           ; d5 and d6 point to lines to draw
-        add.l   #32000-DISPLAY_STEP,a5         ; 160 bytes per line,
-        add.l   #32000-DISPLAY_STEP,a6         ; 2 lines at a time
+        move.l  d5,a5           ; a5 points to first line to draw
+        move.l  d6,a6           ; a6 points to first line of video memory
+        add.l   #32000-DISPLAY_STEP,a5         ; Move a block of DISPLAY_STEP data
+        add.l   #32000-DISPLAY_STEP,a6         ;
 .picdisplay_loop:
 
-        move.w  #DISPLAY_STEP-4,d0       ; 160 bytes per line, 2 lines at a time
-.picdisplay_line_loop:
+        move.w  #DISPLAY_STEP-4,d0       ; Move long ints (4 bytes)
+.picdisplay_line_loop:                   ; Move a DISPLAY_STEP block 4 bytes at a time
         move.l  (a5,d0.w),(a6,d0.w)
         subq.w  #4,d0
         bpl     .picdisplay_line_loop
 
         ;; Wait loop
-        move.l  #1,d3
+        move.l  #1,d3           ; Wait 1/200th of a second
         jsr     wait_hz_200
 
         sub.l   #DISPLAY_STEP,a5
