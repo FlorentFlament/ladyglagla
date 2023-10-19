@@ -1,7 +1,7 @@
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
-        xref movepic_monochrome
+        xref movepic_4colors
         xref picdisplay
         xref picdisplay_stretched
         xref picgum_fx
@@ -40,7 +40,7 @@ main:
 	move.l	d0,a4		; Save physical screen ram base in a4
 
         lea     glagla_pic01,a3
-        jsr     movepic_monochrome
+        jsr     movepic_4colors
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
 

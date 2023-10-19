@@ -1,7 +1,7 @@
 ;;; Basic picture display subroutines
         xref wait_hz_200
 
-        xdef movepic_monochrome
+        xdef movepic_4colors
         xdef picdisplay
         xdef picerase
 
@@ -121,7 +121,7 @@ movepic_16colors:
 ;;; a3 address of picture
 ;;; a4 address of where picture needs to be writen
 ;;; All registers are saved then restored
-movepic_monochrome:
+movepic_4colors:
         movem.l d0-d7/a0-a7,-(sp)
 
 	;; Set picture palette
