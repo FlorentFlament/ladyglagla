@@ -2,7 +2,6 @@
         xref music_data
         xref picscratch_fx
         xref picdisplay
-        xref picdisplay_stretched
         xref picgum_fx
         xref picerase
         xref picture_callisto_glafouk
@@ -10,14 +9,7 @@
         xref textwriter
         xref wait_hz_200
 
-        xref set_palette
-        xref movepic_4colors
-
-	xdef VraiREglagla01_palette
-        xdef VraiREglagla01_0001_data
-        xdef VraiREglagla01_0002_data
-        xdef VraiREglagla01_0003_data
-        xdef VraiREglagla01_0004_data
+        xref animation
 
 	section code
 main:
@@ -39,34 +31,13 @@ main:
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
 
-        ;; testing new function
         ;; Get address of video memory
 	move.w	#2,-(sp)	; Physbase function call
 	trap	#14		; Call XBIOS
 	addq.l	#2,sp
 	move.l	d0,a4		; Save physical screen ram base in a4
 
-        lea     VraiREglagla01_palette,a3
-        jsr     set_palette
-
-        move.l  #25,d3          ; wait 1/8th second (/ 200 8)
-        move.b  #5,d4           ; Repeating animation 5 times
-.VraiREglagla01:
-        lea     VraiREglagla01_0001_data,a3
-        jsr     movepic_4colors
-        jsr     wait_hz_200
-        lea     VraiREglagla01_0002_data,a3
-        jsr     movepic_4colors
-        jsr     wait_hz_200
-        lea     VraiREglagla01_0003_data,a3
-        jsr     movepic_4colors
-        jsr     wait_hz_200
-        lea     VraiREglagla01_0004_data,a3
-        jsr     movepic_4colors
-        jsr     wait_hz_200
-        subq.b  #1,d4
-        bpl     .VraiREglagla01
-
+        jsr     animation
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
 

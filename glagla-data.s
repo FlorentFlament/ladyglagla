@@ -1,3 +1,4 @@
+        xdef VraiREglagla01_data
 	xdef VraiREglagla01_palette
         xdef VraiREglagla01_0001_data
         xdef VraiREglagla01_0002_data
@@ -5,6 +6,12 @@
         xdef VraiREglagla01_0004_data
 
         section VraiREglagla01_data,data
+VraiREglagla01_data:
+	dc.l VraiREglagla01_palette
+        dc.l VraiREglagla01_0001_data
+        dc.l VraiREglagla01_0002_data
+        dc.l VraiREglagla01_0003_data
+        dc.l VraiREglagla01_0004_data
 
 VraiREglagla01_palette:
 	dc.w $0577, $0365, $0243, $0021, $0000, $0000, $0000, $0000

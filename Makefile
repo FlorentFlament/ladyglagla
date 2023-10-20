@@ -10,7 +10,7 @@ PlayerAky.o: PlayerAky.s
 music-data.o: music-data.s vorzugleetch.s
 	vasmm68k_mot -nowarn=58 -align -spaces -noesc -no-opt -Faout -o $@ $<
 
-main.prg: main.o picslib.o picsfx.o textwriter.o utils.o \
+main.prg: main.o animation.o picslib.o picsfx.o textwriter.o utils.o \
 PlayerAky.o music-data.o \
 picture-callisto-glafouk.o \
 glagla-data.o \

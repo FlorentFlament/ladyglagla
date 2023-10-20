@@ -1,7 +1,6 @@
 ;;; A few pictures FXs
         xref wait_hz_200
 
-        xdef picdisplay_stretched
         xdef picscratch_fx
         xdef picgum_fx
 
