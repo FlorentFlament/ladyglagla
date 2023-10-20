@@ -15,6 +15,8 @@ PlayerAky.o music-data.o \
 picture-callisto-glafouk.o \
 VraiREglagla01-data.o \
 VRAI-REglagla02-data.o \
+VRAIglagla33-data.o \
+VRAI-REglagla04-data.o \
 picture-logo.o
 	vc -v -g -nostdlib +tos -o $@ $^
 

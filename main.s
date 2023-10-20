@@ -13,6 +13,11 @@
         xref VraiREglagla01_data
         xref VraiREglagla01_sequence
         xref VRAI_REglagla02_data
+        xref VRAI_REglagla02_sequence
+        xref VRAIglagla33_data
+        xref VRAIglagla33_sequence
+        xref VRAI_REglagla04_data
+        xref VRAI_REglagla04_sequence
 
 	section code
 main:
@@ -46,6 +51,14 @@ main:
 
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
+        jsr     animation
+
+        lea.l   VRAIglagla33_data,a5
+        lea.l   VRAIglagla33_sequence,a6
+        jsr     animation
+
+        lea.l   VRAI_REglagla04_data,a5
+        lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
 
         jsr     picerase
