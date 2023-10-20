@@ -13,7 +13,7 @@ music-data.o: music-data.s vorzugleetch.s
 main.prg: main.o animation.o picslib.o picsfx.o textwriter.o utils.o \
 PlayerAky.o music-data.o \
 picture-callisto-glafouk.o \
-glagla-data.o \
+VraiREglagla01-data.o \
 picture-logo.o
 	vc -v -g -nostdlib +tos -o $@ $^
 

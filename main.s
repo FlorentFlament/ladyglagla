@@ -37,6 +37,7 @@ main:
 	addq.l	#2,sp
 	move.l	d0,a4		; Save physical screen ram base in a4
 
+        lea.l   VraiREglagla01_data,a5
         jsr     animation
         move.l  #200,d3         ; wait
         jsr     wait_hz_200

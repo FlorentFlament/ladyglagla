@@ -1,9 +1,4 @@
         xdef VraiREglagla01_data
-	xdef VraiREglagla01_palette
-        xdef VraiREglagla01_0001_data
-        xdef VraiREglagla01_0002_data
-        xdef VraiREglagla01_0003_data
-        xdef VraiREglagla01_0004_data
 
         section VraiREglagla01_data,data
 VraiREglagla01_data:
