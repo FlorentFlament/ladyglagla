@@ -10,6 +10,9 @@
         xref wait_hz_200
 
         xref animation
+        xref VraiREglagla01_data
+        xref VraiREglagla01_sequence
+        xref VRAI_REglagla02_data
 
 	section code
 main:
@@ -38,9 +41,12 @@ main:
 	move.l	d0,a4		; Save physical screen ram base in a4
 
         lea.l   VraiREglagla01_data,a5
+        lea.l   VraiREglagla01_sequence,a6
         jsr     animation
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
+
+        lea.l   VRAI_REglagla02_data,a5
+        lea.l   VRAI_REglagla02_sequence,a6
+        jsr     animation
 
         jsr     picerase
         move.l  #200,d3         ; wait

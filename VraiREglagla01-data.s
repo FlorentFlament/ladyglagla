@@ -1,6 +1,9 @@
         xdef VraiREglagla01_data
+        xdef VraiREglagla01_sequence
 
         section VraiREglagla01_data,data
+VraiREglagla01_sequence:
+        dc.b 1,2,1,2,1,2,3,4,3,2,0,0 ; 16 bits alignment
 VraiREglagla01_data:
 	dc.l VraiREglagla01_palette
         dc.l VraiREglagla01_0001_data
