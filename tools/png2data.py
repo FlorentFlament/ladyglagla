@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import argparse
 from PIL import Image
 from asmlib import render
@@ -30,6 +31,11 @@ def get_st_palette(rgb_palette):
         st_palette.append(((c[0]>>5) << 8) + ((c[1]>>5) << 4) + (c[2]>>5))
     return st_palette
 
+def pretty_name(filepath):
+    name = "_".join(os.path.basename(filepath).split(sep=".")[:-1])
+    name.replace("-", "_")
+    return name
+
 def main():
     parser = argparse.ArgumentParser(
         prog='png2data',
@@ -41,9 +47,13 @@ def main():
     im = Image.open(args.filename)
     data = list(im.getdata())
     st_pic = process_image(data, args.bitplanes)
-    print("picture:")
-    print(render(st_pic))
-    print("palette:")
+
+    name = pretty_name(args.filename)
+    print()
+    print(f"{name}:")
+    print(f"{name}_palette:")
     print(render(get_st_palette(im.getpalette()[:48])))
+    print(f"{name}_data:")
+    print(render(st_pic))
 
 main()

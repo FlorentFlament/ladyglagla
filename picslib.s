@@ -1,9 +1,10 @@
 ;;; Basic picture display subroutines
         xref wait_hz_200
 
-        xdef movepic_4colors
         xdef picdisplay
         xdef picerase
+        xdef set_palette
+        xdef movepic_4colors
 
 ;;; Display pictures by blocks to make them appear slowly
 ;;; 160 bytes per line
@@ -90,6 +91,18 @@ picerase:
         movem.l (sp)+,d0-d7/a0-a7
         rts
 
+;;; Set picture palette
+;;; a3 address of palette to set
+;;; Registers are saved then restored
+set_palette:
+        movem.l d0-d1/a0-a1,-(sp) ; Save d0,d1,a0,a1 registers (scratched by trap)
+	move.l	a3,-(sp)
+	move.w	#6,-(sp)	; setpalette
+	trap	#14		; XBIOS trap
+	addq.l	#6,sp
+        movem.l (sp)+,d0-d1/a0-a1 ; Restore d0,d1,a0,a1 registers
+        rts
+
 ;;; arguments
 ;;; a3 address of picture
 ;;; a4 address of where picture needs to be writen
@@ -97,24 +110,14 @@ picerase:
 movepic_16colors:
         ;; d6 - physical screen address
         ;; d5 - base picture address
-        movem.l d0-d7/a0-a7,-(sp)
-
-	;; Set picture palette
-	move.l	a3,-(sp)
-	move.w	#6,-(sp)	; setpalette
-	trap	#14		; XBIOS trap
-	addq.l	#6,sp
-
+        movem.l d3-d4,-(sp)
         ;; Copy picture data to video memory
-        ;; Data starts after palette, i.e 32bytes after start of data
-        add.l   #32,a3
         move.w  #32000-4,d3       ; Move long ints (4 bytes)
 .move_loop:                   ; Move a DISPLAY_STEP block 4 bytes at a time
         move.l  (a3,d3.w),(a4,d3.w)
         subq.w  #4,d3
         bpl     .move_loop
-
-        movem.l (sp)+,d0-d7/a0-a7
+        movem.l (sp)+,d3-d4
         rts
 
 ;;; arguments
@@ -122,17 +125,8 @@ movepic_16colors:
 ;;; a4 address of where picture needs to be writen
 ;;; All registers are saved then restored
 movepic_4colors:
-        movem.l d0-d7/a0-a7,-(sp)
-
-	;; Set picture palette
-	move.l	a3,-(sp)
-	move.w	#6,-(sp)	; setpalette
-	trap	#14		; XBIOS trap
-	addq.l	#6,sp
-
+        movem.l d3-d4,-(sp)     ; backup registers d3 and d4 used as indexes
         ;; Copy picture data to video memory
-        ;; Data starts after palette, i.e 32bytes after start of data
-        add.l   #32,a3
         move.l  #16000-4,d3     ; Move every long (4 bytes shift) from picture
         move.l  #32000-8,d4     ; Move 1 long out of 2 in (8 bytes shift) on video ram
 .move_loop:
@@ -140,6 +134,5 @@ movepic_4colors:
         subq.w  #4,d3
         subq.w  #8,d4
         bpl     .move_loop
-
-        movem.l (sp)+,d0-d7/a0-a7
+        movem.l (sp)+,d3-d4     ; restore registers d3 and d4 used as indexes
         rts

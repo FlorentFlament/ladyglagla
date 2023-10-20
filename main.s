@@ -1,16 +1,23 @@
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
-        xref movepic_4colors
         xref picdisplay
         xref picdisplay_stretched
         xref picgum_fx
         xref picerase
         xref picture_callisto_glafouk
         xref picture_logo
-        xref glagla_pic01
         xref textwriter
         xref wait_hz_200
+
+        xref set_palette
+        xref movepic_4colors
+
+	xdef VraiREglagla01_palette
+        xdef VraiREglagla01_0001_data
+        xdef VraiREglagla01_0002_data
+        xdef VraiREglagla01_0003_data
+        xdef VraiREglagla01_0004_data
 
 	section code
 main:
@@ -39,8 +46,23 @@ main:
 	addq.l	#2,sp
 	move.l	d0,a4		; Save physical screen ram base in a4
 
-        lea     glagla_pic01,a3
+        lea     VraiREglagla01_palette,a3
+        jsr     set_palette
+        lea     VraiREglagla01_0001_data,a3
         jsr     movepic_4colors
+        move.l  #25,d3         ; wait 1/8th second (/ 200 8)
+        jsr     wait_hz_200
+        lea     VraiREglagla01_0002_data,a3
+        jsr     movepic_4colors
+        move.l  #25,d3         ; wait 1/8th second (/ 200 8)
+        jsr     wait_hz_200
+        lea     VraiREglagla01_0003_data,a3
+        jsr     movepic_4colors
+        move.l  #25,d3         ; wait 1/8th second (/ 200 8)
+        jsr     wait_hz_200
+        lea     VraiREglagla01_0004_data,a3
+        jsr     movepic_4colors
+
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
 
