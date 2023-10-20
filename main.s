@@ -35,6 +35,25 @@ main:
 	addq.l    #6,sp        ; Correct stack
 
 .main_loop:
+        ;; Ladyglagla introduction
+        jsr     picerase
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
+        lea     picture_callisto_glafouk,a0
+        jsr     picdisplay
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
+        lea     text_glafouk_1,a0
+        jsr     textwriter
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
+        lea     text_glafouk_2,a0
+        jsr     textwriter
+        move.l  #600,d3         ; wait
+        jsr     wait_hz_200
+        jsr     picscratch_fx
+
+        ;; Animation block
         jsr     picerase
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
@@ -61,22 +80,7 @@ main:
         lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
 
-        jsr     picerase
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
-        lea     picture_callisto_glafouk,a0
-        jsr     picdisplay
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
-        lea     text_glafouk_1,a0
-        jsr     textwriter
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
-        lea     text_glafouk_2,a0
-        jsr     textwriter
-        move.l  #600,d3         ; wait
-        jsr     wait_hz_200
-        jsr     picscratch_fx
+        ;; Flush
         jsr     picerase
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
