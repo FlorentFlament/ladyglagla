@@ -3,14 +3,14 @@
         xref wait_hz_200
         xref set_palette
         xref movepic_4colors
-        
+
         xref VraiREglagla01_palette
         xref VraiREglagla01_0001_data
         xref VraiREglagla01_0002_data
         xref VraiREglagla01_0003_data
         xref VraiREglagla01_0004_data
-        
-animation:      
+
+animation:
         lea     VraiREglagla01_palette,a3
         jsr     set_palette
 
