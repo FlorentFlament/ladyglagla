@@ -95,12 +95,12 @@ picerase:
 ;;; a3 address of palette to set
 ;;; Registers are saved then restored
 set_palette:
-        movem.l d0-d1/a0-a1,-(sp) ; Save d0,d1,a0,a1 registers (scratched by trap)
+        movem.l d0-d2/a0-a2,-(sp) ; Save registers possibly scratched by trap
 	move.l	a3,-(sp)
 	move.w	#6,-(sp)	; setpalette
 	trap	#14		; XBIOS trap
 	addq.l	#6,sp
-        movem.l (sp)+,d0-d1/a0-a1 ; Restore d0,d1,a0,a1 registers
+        movem.l (sp)+,d0-d2/a0-a2 ; Restore registers
         rts
 
 ;;; arguments

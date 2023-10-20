@@ -48,20 +48,24 @@ main:
 
         lea     VraiREglagla01_palette,a3
         jsr     set_palette
+
+        move.l  #25,d3          ; wait 1/8th second (/ 200 8)
+        move.b  #5,d4           ; Repeating animation 5 times
+.VraiREglagla01:
         lea     VraiREglagla01_0001_data,a3
         jsr     movepic_4colors
-        move.l  #25,d3         ; wait 1/8th second (/ 200 8)
         jsr     wait_hz_200
         lea     VraiREglagla01_0002_data,a3
         jsr     movepic_4colors
-        move.l  #25,d3         ; wait 1/8th second (/ 200 8)
         jsr     wait_hz_200
         lea     VraiREglagla01_0003_data,a3
         jsr     movepic_4colors
-        move.l  #25,d3         ; wait 1/8th second (/ 200 8)
         jsr     wait_hz_200
         lea     VraiREglagla01_0004_data,a3
         jsr     movepic_4colors
+        jsr     wait_hz_200
+        subq.b  #1,d4
+        bpl     .VraiREglagla01
 
         move.l  #200,d3         ; wait
         jsr     wait_hz_200

@@ -1,9 +1,10 @@
         xdef wait_hz_200
 
 ;;; Wait loop: argument is 200th of second passed in d3
-;;; d3 will be destroyed
-;;; d0-d2/a0-a2 will be scratched
+;;; register are saved and restored
 wait_hz_200:
+        movem.l d0-d3/a0-a2,-(sp) ; Save registers
+
 	pea     get_hz_200
 	move.w  #38,-(sp)    ; Supexec function call
 	trap    #14          ; Call XBIOS
@@ -19,6 +20,7 @@ wait_hz_200:
         cmp.l   d0,d3        ; Check whether we've reached end time
         bge     .wait_loop   ; Loop until d0 >= d3, delay has elapsed
 
+        movem.l (sp)+,d0-d3/a0-a2 ; Restore registers
         rts
 
 ;;; To be called by Supexec
