@@ -1,16 +1,16 @@
 ;;; A few pictures FXs
-        xref wait_hz_200
-
         xdef picscratch_fx
         xdef picgum_fx
 
+        xref wait_hz_200
+        xref set_palette
+
+
 ;;; a5 - base picture address
 picgum_fx:
-	;; Set picture palette
-	move.l	a5,-(sp)
-	move.w	#6,-(sp)	; setpalette
-	trap	#14		; XBIOS trap
-	addq.l	#6,sp
+        move.l  a5,a3
+        jsr     set_palette
+
         ;; Data starts after palette, i.e 32bytes after start of data
         add.l   #32,a5
 

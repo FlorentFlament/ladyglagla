@@ -12,6 +12,7 @@
         xref textwriter
         xref wait_hz_200
         xref wait_next_pattern
+        xref xor_background
 
         xref animation
         xref VraiREglagla01_data
@@ -133,14 +134,14 @@ main:
 
 demo_vbl_stuff:
         ;; Blink background
-        cmp     #6,tempo_cnt
+        cmp     #MUSIC_TEMPO-7,tempo_cnt
         bne     .not_6
-        eor.w   #$ffff,$ff8240
+        jsr     xor_background
         bra     .continue
 .not_6
-        cmp     #0,tempo_cnt
+        cmp     #MUSIC_TEMPO-1,tempo_cnt
         bne     .continue
-        eor.w   #$ffff,$ff8240
+        jsr     xor_background
 .continue
         subq.w  #1,tempo_cnt
         bpl     .endsub

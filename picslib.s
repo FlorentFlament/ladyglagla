@@ -4,6 +4,7 @@
         xdef picdisplay
         xdef picerase
         xdef set_palette
+        xdef xor_background
         xdef movepic_4colors
 
 ;;; Display pictures by blocks to make them appear slowly
@@ -25,11 +26,8 @@ picdisplay:
 	addq.l	#2,sp
 	move.l	d0,d6		; Save physical screen ram base in d6
 
-	;; Set picture palette
-	move.l	d5,-(sp)
-	move.w	#6,-(sp)	; setpalette
-	trap	#14		; XBIOS trap
-	addq.l	#6,sp
+        move.l  d5,a3
+        jsr     set_palette
 
         ;; Copy picture data to video memory
         ;; Data starts after palette, i.e 32bytes after start of data
@@ -101,6 +99,10 @@ set_palette:
 	trap	#14		; XBIOS trap
 	addq.l	#6,sp
         movem.l (sp)+,d0-d2/a0-a2 ; Restore registers
+        rts
+
+xor_background:
+        eor.w   #$ffff,$ff8240
         rts
 
 ;;; arguments
