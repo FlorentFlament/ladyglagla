@@ -19,12 +19,15 @@
         xref VRAI_REglagla04_data
         xref VRAI_REglagla04_sequence
 
+MUSIC_TEMPO=40                  ; 75 bpm
+
 	section code
 main:
         ;; Hide mouse with a line A function
         dc.w    $A00A
 
         ;; Initialize music player
+        move.w  #MUSIC_TEMPO,tempo_cnt
 	lea     music_data,a0
 	jsr     PLY_AKYst_Start+0           ;init player and tune
 
@@ -116,6 +119,24 @@ main:
 
 	clr.w	-(sp)		; Pterm0
 	trap	#1		; GEMDOS
+        ;; END
+
+demo_vbl_stuff:
+        ;; Blink background
+        cmp     #MUSIC_TEMPO,tempo_cnt
+        bne     .not_50
+        eor.w   #$ffff,$ff8240
+        bra     .continue
+.not_50
+        cmp     #MUSIC_TEMPO-6,tempo_cnt
+        bne     .continue
+        eor.w   #$ffff,$ff8240
+.continue
+        subq.w  #1,tempo_cnt
+        bne     .endsub
+        move.w  #MUSIC_TEMPO,tempo_cnt
+.endsub
+        rts
 
 set_music_player_vbl:
 	move    sr,-(sp)
@@ -127,6 +148,7 @@ set_music_player_vbl:
 
 vbl:
 	movem.l d0-a6,-(sp)
+        jsr     demo_vbl_stuff
 	lea     music_data,a0           ;tell the player where to find the tune start
 	jsr     PLY_AKYst_Start+2       ;play that funky music
 	movem.l (sp)+,d0-a6
@@ -160,7 +182,6 @@ text_glafouk_2:
         dc.b	$1b,'Y',' '+14,' '+14,"poke her face ?"
         dc.b    0
 
-
 text_credits:
         ;; colors are based on Flush logo palette
         dc.b    $1b,'c',' '+1       ; set background color to black
@@ -173,4 +194,4 @@ text_credits:
         dc.b    0
 
         section bss
-        ;; Put variables here
+tempo_cnt: dcb.w 1
