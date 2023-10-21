@@ -1,3 +1,6 @@
+	xdef tempo_cnt
+	xdef beat_cnt
+
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
@@ -8,6 +11,7 @@
         xref picture_logo
         xref textwriter
         xref wait_hz_200
+        xref wait_next_pattern
 
         xref animation
         xref VraiREglagla01_data
@@ -26,8 +30,11 @@ main:
         ;; Hide mouse with a line A function
         dc.w    $A00A
 
+        ;; Initialize demo
+        move.w  #MUSIC_TEMPO-1,tempo_cnt
+        move.w  #0,beat_cnt
+
         ;; Initialize music player
-        move.w  #MUSIC_TEMPO,tempo_cnt
 	lea     music_data,a0
 	jsr     PLY_AKYst_Start+0           ;init player and tune
 
@@ -40,26 +47,24 @@ main:
 .main_loop:
         ;; Ladyglagla introduction
         jsr     picerase
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
+        jsr     wait_next_pattern
         lea     picture_callisto_glafouk,a0
         jsr     picdisplay
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
+        jsr     wait_next_pattern
         lea     text_glafouk_1,a0
         jsr     textwriter
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
+        jsr     wait_next_pattern
         lea     text_glafouk_2,a0
         jsr     textwriter
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
+        jsr     wait_next_pattern
         jsr     picscratch_fx
+        jsr     wait_next_pattern
 
         ;; Animation block
         jsr     picerase
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
+        jsr     wait_next_pattern
 
         ;; Get address of video memory
 	move.w	#2,-(sp)	; Physbase function call
@@ -70,37 +75,42 @@ main:
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
         jsr     animation
+        jsr     wait_next_pattern
 
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         jsr     animation
+        jsr     wait_next_pattern
 
         lea.l   VRAIglagla33_data,a5
         lea.l   VRAIglagla33_sequence,a6
         jsr     animation
+        jsr     wait_next_pattern
 
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
+        jsr     wait_next_pattern
 
         ;; Flush
         jsr     picerase
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
+        jsr     wait_next_pattern
         lea     picture_logo,a0
         jsr     picdisplay
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
+        jsr     wait_next_pattern
         lea     picture_logo,a5
         jsr     picgum_fx
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
+        jsr     wait_next_pattern
         jsr     picscratch_fx
         lea     text_credits,a0
         jsr     textwriter
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
+        jsr     wait_next_pattern
         jsr     picscratch_fx
+        jsr     wait_next_pattern
         bra     .main_loop
 
         ;; Wait for any key press then return
@@ -123,18 +133,19 @@ main:
 
 demo_vbl_stuff:
         ;; Blink background
-        cmp     #MUSIC_TEMPO,tempo_cnt
-        bne     .not_50
+        cmp     #6,tempo_cnt
+        bne     .not_6
         eor.w   #$ffff,$ff8240
         bra     .continue
-.not_50
-        cmp     #MUSIC_TEMPO-6,tempo_cnt
+.not_6
+        cmp     #0,tempo_cnt
         bne     .continue
         eor.w   #$ffff,$ff8240
 .continue
         subq.w  #1,tempo_cnt
-        bne     .endsub
-        move.w  #MUSIC_TEMPO,tempo_cnt
+        bpl     .endsub
+        move.w  #MUSIC_TEMPO-1,tempo_cnt
+        addq.w  #1,beat_cnt
 .endsub
         rts
 
@@ -194,4 +205,5 @@ text_credits:
         dc.b    0
 
         section bss
-tempo_cnt: dcb.w 1
+tempo_cnt:      dcb.w 1
+beat_cnt:       dcb.w 1

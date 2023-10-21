@@ -1,4 +1,5 @@
         xdef wait_hz_200
+        xdef wait_next_pattern
 
 ;;; Wait loop: argument is 200th of second passed in d3
 ;;; register are saved and restored
@@ -32,4 +33,17 @@ get_hz_200:
         ;; times per second, controlled by Timer C on the timer chip
         ;; source: https://bumbershootsoft.wordpress.com/2021/05/29/timing-on-the-atari-st/
         move.l  $0004ba,d0
+        rts
+
+wait_next_pattern:
+        move.w  d0,-(sp)
+.loop:
+        ;; Wait for even beat
+        move.w  beat_cnt,d0
+        and.w   #$01,d0
+        beq     .loop
+        ;; Wait for next beat
+        move.w  tempo_cnt,d0
+        bne     .loop
+        move.w  (sp)+,d0
         rts
