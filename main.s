@@ -55,20 +55,20 @@ main:
 
 .main_loop:
         ;; Ladyglagla introduction
-;        jsr     picerase
-;        jsr     wait_next_pattern
-;        lea     picture_callisto_glafouk,a0
-;        jsr     picdisplay
-;        jsr     wait_next_pattern
-;        lea     text_glafouk_1,a0
-;        jsr     textwriter
-;        jsr     wait_next_pattern
-;        lea     text_glafouk_2,a0
-;        jsr     textwriter
-;        move.l  #600,d3         ; wait
-;        jsr     wait_hz_200
-;
-;        jsr     wait_next_pattern
+        jsr     picerase
+        jsr     wait_next_pattern
+        lea     picture_callisto_glafouk,a0
+        jsr     picdisplay
+        jsr     wait_next_pattern
+        lea     text_glafouk_1,a0
+        jsr     textwriter
+        jsr     wait_next_pattern
+        lea     text_glafouk_2,a0
+        jsr     textwriter
+        move.l  #600,d3         ; wait
+        jsr     wait_hz_200
+
+        jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
         move.l  #text_glagla_1,d3
@@ -205,6 +205,8 @@ text_glafouk_2:
         dc.b    0
 
 text_glagla_1:
+        dc.b    $1b,'c',' '+0   ; set text background color to background
+        dc.b    $1b,'b',' '+4   ; set text color to index 4
         dc.b    $1b,'Y',' '+24,' '+0,"Hey, d'ya hear that fluffy mo5 platini ?",0
 text_glagla_2:
         dc.b    $1b,'Y',' '+24,' '+0,"Wouhou, let's run Hell as Lady Glagla !",0
