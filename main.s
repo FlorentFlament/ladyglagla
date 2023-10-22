@@ -45,6 +45,13 @@ main:
 	trap      #14          ; Call XBIOS
 	addq.l    #6,sp        ; Correct stack
 
+        ;; Animation block
+        ;; Get address of video memory
+	move.w	#2,-(sp)	; Physbase function call
+	trap	#14		; Call XBIOS
+	addq.l	#2,sp
+	move.l	d0,a4		; Save physical screen ram base in a4
+
 .main_loop:
         ;; Ladyglagla introduction
         jsr     wait_next_pattern
@@ -60,13 +67,6 @@ main:
         jsr     textwriter
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
-
-        ;; Animation block
-        ;; Get address of video memory
-	move.w	#2,-(sp)	; Physbase function call
-	trap	#14		; Call XBIOS
-	addq.l	#2,sp
-	move.l	d0,a4		; Save physical screen ram base in a4
 
         jsr     wait_next_pattern
         jsr     picerase

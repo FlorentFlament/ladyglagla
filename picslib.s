@@ -58,35 +58,28 @@ picdisplay:
 
 ;;; All registers are saved then restored
 ;;; Erases the screen
+;;; a4 address of video memory
 picerase:
-        ;; d6 - physical screen address
-        movem.l d0-d7/a0-a7,-(sp)
+        movem.l a6/d0/d3,-(sp)
 
-        ;; Get address of video memory
-	move.w	#2,-(sp)	; Physbase function call
-	trap	#14		; Call XBIOS
-	addq.l	#2,sp
-	move.l	d0,d6		; Save physical screen ram base in d6
-
-        move.l  d6,a6           ; d6 point to lines to draw
-        add.l   #32000-DISPLAY_STEP,a6         ; n lines at a time
-.picdisplay_loop:
-
+        move.l  a4,a6                   ;
+        add.l   #32000-DISPLAY_STEP,a6  ; a6 point to 1st line to draw
+.loop:
         move.w  #DISPLAY_STEP-4,d0
-.picdisplay_line_loop:
+.line_loop:
         move.l  #0,(a6,d0.w)
         subq.w  #4,d0
-        bpl     .picdisplay_line_loop
+        bpl     .line_loop
 
         ;; Wait loop
         move.l  #1,d3
         jsr     wait_hz_200
 
         sub.l   #DISPLAY_STEP,a6
-        cmp.l   d6,a6
-        bge     .picdisplay_loop
+        cmp.l   a4,a6
+        bge     .loop
 
-        movem.l (sp)+,d0-d7/a0-a7
+        movem.l (sp)+,a6/d0/d3
         rts
 
 ;;; Set picture palette
