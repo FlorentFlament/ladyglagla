@@ -59,15 +59,15 @@ main:
         jsr     wait_next_pattern
         lea     picture_callisto_glafouk,a0
         jsr     picdisplay
-        jsr     wait_next_pattern
-        lea     text_glafouk_1,a0
-        jsr     textwriter
-        jsr     wait_next_pattern
-        lea     text_glafouk_2,a0
-        jsr     textwriter
-        move.l  #600,d3         ; wait
-        jsr     wait_hz_200
-
+;        jsr     wait_next_pattern
+;        lea     text_glafouk_1,a0
+;        jsr     textwriter
+;        jsr     wait_next_pattern
+;        lea     text_glafouk_2,a0
+;        jsr     textwriter
+;        move.l  #600,d3         ; wait
+;        jsr     wait_hz_200
+;
         jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
