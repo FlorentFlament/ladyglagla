@@ -33,12 +33,8 @@ draw_pic:
         move.l  (a5,d6.w),a3
         jsr     movepic_4colors
         movem.l (sp)+,d6/a3
-        rts
 
-;;; a6 address of animation sequence
-;;; d5 index in sequence table
-;;; -> d5 new index in seq table
-update_seq_index:
+        ;; Update sequence index
         addq.w  #1,d5
         tst.b   (a6,d5.w)       ; check whether end of sequence table has been reached
         bne     .end
@@ -46,29 +42,47 @@ update_seq_index:
 .end:
         rts
 
-;;;
+;;; Address of next character is in d3
+draw_char:
+        movem.l a0-a2/d0-d2,-(sp)
+        move.l  d3,a0
+        move.b  (a0),d0
+        beq     .end            ; finish if character \0 encountered
+        ;; Display character
+        move.w  d0,-(sp)
+        move.w  #2,-(sp)        ; Cconout
+        trap    #1              ; Gemdos trap
+        addq.l  #4,sp
+        ;; increase character pointer
+        addq.w  #1,d3
+.end:
+        movem.l (sp)+,a0-a2/d0-d2
+        rts
+
+;;; d3 address of string to write
 ;;; a4 address of video memory
 ;;; a5 address of animation data
 ;;; a6 address of animation sequence
 ;;; registers will be saved and restored
 animation:
-        movem.l a0-a3/d0-d2,-(sp)
+        movem.l a0-a3/d0-d3/d5,-(sp)
         ;; t_next_chr = 0(sp)
         ;; t_next_pic = 4(sp)
         ;; t_end = 8(sp)
         sub.l   #12,sp           ; Allocate 3 longs in the stack
         jsr     get_hz_200
         move.l  d0,0(sp)
-        add.l   #10,0(sp)       ; time for next character
+        add.l   #100,0(sp)       ; time for next character
         move.l  d0,4(sp)
         add.l   #25,4(sp)       ; time for next picture
         move.l  d0,8(sp)
         add.l   #1280,8(sp)     ; time before end - one beat is 160 hz_200 ticks
 
-        move.l  (a5),a3
+        move.l  (a5),a3         ; -> a3 palette address
+        move.w  #0,d5           ; initialize sequence index in d5
         jsr     set_palette
         jsr     draw_pic
-        jsr     update_seq_index
+        jsr     draw_char
 
         move.l  sp,a3           ; store address of time counters for use in spinlock
 .main_loop:
@@ -82,18 +96,18 @@ animation:
         cmp.l   0(sp),d0        ; compare with t_next_chr
         ble     .t_next_pic
         ;; Display a character
+        jsr     draw_char
         add.l   #10,0(sp)       ; prepare for next character display
 .t_next_pic:
         cmp.l   4(sp),d0        ; compare with t_next_pic
         ble     .t_end
         ;; Display next pic
         jsr     draw_pic
-        jsr     update_seq_index
         add.l   #25,4(sp)       ; prepare for next pic display
 .t_end:
         cmp.l   8(sp),d0        ; compare with t_end
         ble     .main_loop
         ;; End of animation
         add.l   #12,sp          ; Unallocate the 3 longs in stack
-        movem.l (sp)+,a0-a3/d0-d2
+        movem.l (sp)+,a0-a3/d0-d3/d5
         rts

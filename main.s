@@ -55,23 +55,23 @@ main:
 
 .main_loop:
         ;; Ladyglagla introduction
-        jsr     picerase        ; crash
-        jsr     wait_next_pattern
-        lea     picture_callisto_glafouk,a0
-        jsr     picdisplay
-        jsr     wait_next_pattern
-        lea     text_glafouk_1,a0
-        jsr     textwriter
-        jsr     wait_next_pattern
-        lea     text_glafouk_2,a0
-        jsr     textwriter
-        move.l  #600,d3         ; wait
-        jsr     wait_hz_200
-
-        jsr     wait_next_pattern
+;        jsr     picerase
+;        jsr     wait_next_pattern
+;        lea     picture_callisto_glafouk,a0
+;        jsr     picdisplay
+;        jsr     wait_next_pattern
+;        lea     text_glafouk_1,a0
+;        jsr     textwriter
+;        jsr     wait_next_pattern
+;        lea     text_glafouk_2,a0
+;        jsr     textwriter
+;        move.l  #600,d3         ; wait
+;        jsr     wait_hz_200
+;
+;        jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
-        lea.l   text_glagla_1,a3
+        move.l  #text_glagla_1,d3
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
         jsr     animation
@@ -79,6 +79,7 @@ main:
         jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
+        move.l  #text_glagla_2,d3
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         jsr     animation
@@ -86,6 +87,7 @@ main:
         jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
+        move.l  #text_glagla_3,d3
         lea.l   VRAIglagla33_data,a5
         lea.l   VRAIglagla33_sequence,a6
         jsr     animation
@@ -93,6 +95,7 @@ main:
         jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
+        move.l  #text_glagla_4,d3
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
@@ -202,7 +205,13 @@ text_glafouk_2:
         dc.b    0
 
 text_glagla_1:
-        dc.b    $1b,'Y',' '+14,' '+14,"Hey, d'ya hear that fluffy mo5 platini ?"
+        dc.b    $1b,'Y',' '+24,' '+0,"Hey, d'ya hear that fluffy mo5 platini ?",0
+text_glagla_2:
+        dc.b    $1b,'Y',' '+24,' '+0,"Wouhou, let's run Hell as Lady Glagla !",0
+text_glagla_3:
+        dc.b    $1b,'Y',' '+24,' '+0,"Hey hey, time for a li'le disco drink ?",0
+text_glagla_4:
+        dc.b    $1b,'Y',' '+24,' '+0,"Let's make some noise on that keyboard !",0
 
 text_credits:
         ;; colors are based on Flush logo palette
