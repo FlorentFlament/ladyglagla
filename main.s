@@ -47,6 +47,7 @@ main:
 
 .main_loop:
         ;; Ladyglagla introduction
+        jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
         lea     picture_callisto_glafouk,a0
@@ -59,41 +60,44 @@ main:
         jsr     textwriter
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
-        jsr     wait_next_pattern
-        jsr     picscratch_fx
-        jsr     wait_next_pattern
 
         ;; Animation block
-        jsr     picerase
-        jsr     wait_next_pattern
-
         ;; Get address of video memory
 	move.w	#2,-(sp)	; Physbase function call
 	trap	#14		; Call XBIOS
 	addq.l	#2,sp
 	move.l	d0,a4		; Save physical screen ram base in a4
 
+        jsr     wait_next_pattern
+        jsr     picerase
+        jsr     wait_next_pattern
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
         jsr     animation
-        jsr     wait_next_pattern
 
+        jsr     wait_next_pattern
+        jsr     picerase
+        jsr     wait_next_pattern
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         jsr     animation
-        jsr     wait_next_pattern
 
+        jsr     wait_next_pattern
+        jsr     picerase
+        jsr     wait_next_pattern
         lea.l   VRAIglagla33_data,a5
         lea.l   VRAIglagla33_sequence,a6
         jsr     animation
-        jsr     wait_next_pattern
 
+        jsr     wait_next_pattern
+        jsr     picerase
+        jsr     wait_next_pattern
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
-        jsr     wait_next_pattern
 
         ;; Flush
+        jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
         lea     picture_logo,a0
@@ -105,13 +109,13 @@ main:
         jsr     picgum_fx
         jsr     wait_next_pattern
         jsr     picscratch_fx
+        jsr     wait_next_pattern
         lea     text_credits,a0
         jsr     textwriter
         move.l  #600,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
         jsr     picscratch_fx
-        jsr     wait_next_pattern
         bra     .main_loop
 
         ;; Wait for any key press then return
