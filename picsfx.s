@@ -8,32 +8,28 @@
 
 ;;; a5 - base picture address
 picgum_fx:
+        movem.l a3/a5/d2,-(sp)
         move.l  a5,a3
         jsr     set_palette
-
         ;; Data starts after palette, i.e 32bytes after start of data
         add.l   #32,a5
-
         move.w  #400,d2
 .loop:
         jsr     picdisplay_stretched
         dbra    d2,.loop
+        movem.l (sp)+,a3/a5/d2
         rts
 
 ;;; Palette is set already
 ;;; Parameters
+;;; a4 - physical screen base address
 ;;; a5 - base picture address
 ;;; d2 - index in displacement table
 ;;; Uses a2,a3,a4,a6
 ;;; Uses d0,d1,d2
 picdisplay_stretched:
-        movem.l d2/a5,-(sp)     ; save d2 and a5 for further use
-
-        ;; Get address of video memory
-	move.w	#2,-(sp)	; Physbase function call
-	trap	#14		; Call XBIOS
-	addq.l	#2,sp
-	move.l	d0,a6		; Save physical screen ram base in a6
+        movem.l a2-a6/d0-d2,-(sp)     ; save d2 and a5 for further use
+	move.l	a4,a6		; Save physical screen ram base in a6
 
         lea.l   32000(a5),a4    ; Compute end of picture in a4
         lea.l   32000(a6),a2    ; End of screen in a2
@@ -62,7 +58,7 @@ picdisplay_stretched:
         cmp.l   a2,a6         ; display 200 lines
         blt     .picdisplay_loop
 
-        movem.l (sp)+,d2/a5
+        movem.l (sp)+,a2-a6/d0-d2
         rts
 
 picscratch_fx:

@@ -1,5 +1,6 @@
 	xdef tempo_cnt
 	xdef beat_cnt
+        xdef main
 
         xref PLY_AKYst_Start
         xref music_data
@@ -54,23 +55,23 @@ main:
 
 .main_loop:
         ;; Ladyglagla introduction
-        jsr     wait_next_pattern
-        jsr     picerase
+        jsr     picerase        ; crash
         jsr     wait_next_pattern
         lea     picture_callisto_glafouk,a0
         jsr     picdisplay
-;        jsr     wait_next_pattern
-;        lea     text_glafouk_1,a0
-;        jsr     textwriter
-;        jsr     wait_next_pattern
-;        lea     text_glafouk_2,a0
-;        jsr     textwriter
-;        move.l  #600,d3         ; wait
-;        jsr     wait_hz_200
-;
+        jsr     wait_next_pattern
+        lea     text_glafouk_1,a0
+        jsr     textwriter
+        jsr     wait_next_pattern
+        lea     text_glafouk_2,a0
+        jsr     textwriter
+        move.l  #600,d3         ; wait
+        jsr     wait_hz_200
+
         jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
+        lea.l   text_glagla_1,a3
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
         jsr     animation
@@ -116,6 +117,8 @@ main:
         jsr     wait_hz_200
         jsr     wait_next_pattern
         jsr     picscratch_fx
+
+        jsr     wait_next_pattern
         bra     .main_loop
 
         ;; Wait for any key press then return
@@ -140,12 +143,12 @@ demo_vbl_stuff:
         ;; Blink background
         cmp     #MUSIC_TEMPO-7,tempo_cnt
         bne     .not_6
-        jsr     xor_background
+        ;jsr     xor_background
         bra     .continue
 .not_6
         cmp     #MUSIC_TEMPO-1,tempo_cnt
         bne     .continue
-        jsr     xor_background
+        ;jsr     xor_background
 .continue
         subq.w  #1,tempo_cnt
         bpl     .endsub
@@ -197,6 +200,9 @@ text_glafouk_2:
         dc.b	$1b,'Y',' '+13,' '+14,"and see my..."
         dc.b	$1b,'Y',' '+14,' '+14,"poke her face ?"
         dc.b    0
+
+text_glagla_1:
+        dc.b    $1b,'Y',' '+14,' '+14,"Hey, d'ya hear that fluffy mo5 platini ?"
 
 text_credits:
         ;; colors are based on Flush logo palette
