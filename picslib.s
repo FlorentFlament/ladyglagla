@@ -15,6 +15,7 @@ DISPLAY_STEP = 16*160
 
 ;;; a3 must contain address of picture
 ;;; a4 address of video memory
+;;; d4 and d5 are the 2 longs to be used as erase colors
 ;;; All registers are saved then restored
 picdisplay:
         ;; d6 - physical screen address
@@ -65,6 +66,7 @@ picdisplay:
 ;;; All registers are saved then restored
 ;;; Erases the screen
 ;;; a4 address of video memory
+;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase:
         movem.l a6/d0/d3,-(sp)
 
@@ -73,8 +75,8 @@ picerase:
 .loop:
         move.w  #DISPLAY_STEP-8,d0
 .line_loop:
-        move.l  #$ffffffff,(a6,d0.w)
-        move.l  #$00000000,4(a6,d0.w)
+        move.l  d4,(a6,d0.w)
+        move.l  d5,4(a6,d0.w)
         subq.w  #8,d0
         bpl     .line_loop
         ;; Wait loop
@@ -91,8 +93,8 @@ picerase:
         move.l  a6,d0
         move.l  a4,a6
 .finalize_loop:
-        move.l  #$ffffffff,(a6,d0.w)
-        move.l  #$00000000,4(a6,d0.w)
+        move.l  d4,(a6,d0.w)
+        move.l  d5,4(a6,d0.w)
         subq.w  #8,d0
         bpl     .finalize_loop
 

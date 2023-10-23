@@ -30,10 +30,6 @@ MUSIC_TEMPO=40                  ; 75 bpm
 
 	section code
 main:
-        ;; Initialize palette with first picture's
-        lea     picture_callisto_glafouk,a3
-        jsr     set_palette
-
         ;; Hide mouse with a line A function
         dc.w    $A00A
 
@@ -58,9 +54,16 @@ main:
 	addq.l	#2,sp
 	move.l	d0,a4		; Save physical screen ram base in a4
 
+;        ;; Initialize palette with first picture's
+;        lea     picture_callisto_glafouk,a3
+;        jsr     set_palette
+        ;; colors to try 4,5,6,10
+        ;; picerase pattern
+        move.l  #$00000000,d4   ; 5
+        move.l  #$00000000,d5
+        jsr     picerase
 .main_loop:
         ;; Ladyglagla introduction
-        jsr     picerase
         jsr     wait_next_pattern
         lea     picture_callisto_glafouk,a3
         jsr     picdisplay
@@ -72,42 +75,52 @@ main:
         jsr     textwriter
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
-
         jsr     wait_next_pattern
+        move.l  #$0000ffff,d4   ; 5
+        move.l  #$00000000,d5
         jsr     picerase
+
         jsr     wait_next_pattern
         move.l  #text_glagla_1,d3
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
         jsr     animation
-
         jsr     wait_next_pattern
+        move.l  #$ffffffff,d4   ; 3
+        move.l  #$00000000,d5
         jsr     picerase
+
         jsr     wait_next_pattern
         move.l  #text_glagla_2,d3
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         jsr     animation
-
         jsr     wait_next_pattern
+        move.l  #$0000ffff,d4   ; 2
+        move.l  #$00000000,d5
         jsr     picerase
+
         jsr     wait_next_pattern
         move.l  #text_glagla_3,d3
         lea.l   VRAIglagla33_data,a5
         lea.l   VRAIglagla33_sequence,a6
         jsr     animation
-
         jsr     wait_next_pattern
+        move.l  #$ffff0000,d4   ; 1
+        move.l  #$00000000,d5
         jsr     picerase
+
         jsr     wait_next_pattern
         move.l  #text_glagla_4,d3
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
+        jsr     wait_next_pattern
+        move.l  #$ffffffff,d4   ; 3
+        move.l  #$00000000,d5
+        jsr     picerase
 
         ;; Flush
-        jsr     wait_next_pattern
-        jsr     picerase
         jsr     wait_next_pattern
         lea     picture_logo,a3
         jsr     picdisplay
@@ -124,8 +137,11 @@ main:
         jsr     picscratch_fx
         move.l  #100,d3         ; wait
         jsr     wait_hz_200
-
         jsr     wait_next_pattern
+        move.l  #$00000000,d4   ; 4
+        move.l  #$ffff0000,d5
+        jsr     picerase
+
         bra     .main_loop
 
         ;; Wait for any key press then return
