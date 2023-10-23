@@ -2,6 +2,7 @@
         xref wait_hz_200
 
         xdef picdisplay
+        xdef picdisplay2
         xdef picerase
         xdef set_palette
         xdef xor_background
@@ -10,16 +11,16 @@
 ;;; Display pictures by blocks to make them appear slowly
 ;;; 160 bytes per line
 ;;; 8 lines at a time
-DISPLAY_STEP = 24*160
+DISPLAY_STEP = 16*160
 
-;;; a0 must contain address of picture
+;;; a3 must contain address of picture
 ;;; a4 address of video memory
 ;;; All registers are saved then restored
 picdisplay:
         ;; d6 - physical screen address
         ;; d5 - base picture address
         movem.l a3/a5/a6/d0/d3/d5/d6,-(sp)
-        move.l  a0,d5
+        move.l  a3,d5
         move.l  a4,d6   ; Save physical screen ram base in d6
 
         move.l  d5,a3
@@ -98,6 +99,16 @@ picerase:
         movem.l (sp)+,a6/d0/d3
         rts
 
+;;; a3 address of picture (prefixed by palette)
+;;; a4 address of video ram
+picdisplay2:
+        move.l  a3,-(sp)
+        jsr set_palette
+        add.l   #32,a3          ; picture data is 32 bytes after the palette
+        jsr movepic_16colors
+        move.l  (sp)+,a3
+        rts
+
 ;;; Set picture palette
 ;;; a3 address of palette to set
 ;;; Registers are saved then restored
@@ -108,10 +119,6 @@ set_palette:
 	trap	#14		; XBIOS trap
 	addq.l	#6,sp
         movem.l (sp)+,d0-d2/a0-a2 ; Restore registers
-        rts
-
-xor_background:
-        eor.w   #$ffff,$ff8240
         rts
 
 ;;; arguments

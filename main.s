@@ -5,7 +5,9 @@
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
+        xref set_palette
         xref picdisplay
+        xref picdisplay2
         xref picgum_fx
         xref picerase
         xref picture_callisto_glafouk
@@ -13,7 +15,6 @@
         xref textwriter
         xref wait_hz_200
         xref wait_next_pattern
-        xref xor_background
 
         xref animation
         xref VraiREglagla01_data
@@ -29,6 +30,10 @@ MUSIC_TEMPO=40                  ; 75 bpm
 
 	section code
 main:
+        ;; Initialize palette with first picture's
+        lea     picture_callisto_glafouk,a3
+        jsr     set_palette
+
         ;; Hide mouse with a line A function
         dc.w    $A00A
 
@@ -57,7 +62,7 @@ main:
         ;; Ladyglagla introduction
         jsr     picerase
         jsr     wait_next_pattern
-        lea     picture_callisto_glafouk,a0
+        lea     picture_callisto_glafouk,a3
         jsr     picdisplay
         lea     text_glafouk_1,a0
         jsr     textwriter
@@ -104,7 +109,7 @@ main:
         jsr     wait_next_pattern
         jsr     picerase
         jsr     wait_next_pattern
-        lea     picture_logo,a0
+        lea     picture_logo,a3
         jsr     picdisplay
         move.l  #500,d3         ; wait
         jsr     wait_hz_200
@@ -142,16 +147,6 @@ main:
         ;; END
 
 demo_vbl_stuff:
-        ;; Blink background
-        cmp     #MUSIC_TEMPO-7,tempo_cnt
-        bne     .not_6
-        ;jsr     xor_background
-        bra     .continue
-.not_6
-        cmp     #MUSIC_TEMPO-1,tempo_cnt
-        bne     .continue
-        ;jsr     xor_background
-.continue
         subq.w  #1,tempo_cnt
         bpl     .endsub
         move.w  #MUSIC_TEMPO-1,tempo_cnt
