@@ -9,8 +9,10 @@
         xref picdisplay
         xref picdisplay2
         xref picgum_fx
-        xref picerase_downup
-        xref picerase_updown
+        xref picerase_bottomup
+        xref picerase_topdown
+        xref picerase_leftright
+        xref picerase_rightleft
         xref picture_callisto_glafouk
         xref picture_logo
         xref textwriter
@@ -55,10 +57,12 @@ main:
 	addq.l	#2,sp
 	move.l	d0,a4		; Save physical screen ram base in a4
 
+        move.l  #2230,d6        ; duration of animation
+                                ; 14 beats at 160 ticks per beat minus 10 margin
         ;; picerase_updown pattern
         move.l  #$00000000,d4   ; 5
         move.l  #$00000000,d5
-        jsr     picerase_downup
+        jsr     picerase_bottomup
 .main_loop:
         ;; Ladyglagla introduction
         jsr     wait_next_pattern
@@ -73,51 +77,67 @@ main:
         move.l  #200,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
-        move.l  #$0000ffff,d4   ; 5
-        move.l  #$00000000,d5
-        jsr     picerase_updown
 
+        move.l  #$00000000,d4   ; 4
+        move.l  #$ffff0000,d5
+        jsr     picerase_leftright
+        jsr     wait_next_pattern
+        move.l  #$0000ffff,d4   ; 2
+        move.l  #$00000000,d5
+        jsr     picerase_topdown
         jsr     wait_next_pattern
         move.l  #text_glagla_1,d3
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
         jsr     animation
         jsr     wait_next_pattern
+
         move.l  #$ffffffff,d4   ; 3
         move.l  #$00000000,d5
-        jsr     picerase_downup
-
+        jsr     picerase_rightleft
+        jsr     wait_next_pattern
+        move.l  #$0000ffff,d4   ; 2
+        move.l  #$00000000,d5
+        jsr     picerase_bottomup
         jsr     wait_next_pattern
         move.l  #text_glagla_2,d3
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         jsr     animation
         jsr     wait_next_pattern
-        move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d5
-        jsr     picerase_updown
 
+        move.l  #$ffff0000,d4   ; 1
+        move.l  #$00000000,d5
+        jsr     picerase_topdown
+        jsr     wait_next_pattern
+        move.l  #$ffffffff,d4   ; 3
+        move.l  #$00000000,d5
+        jsr     picerase_leftright
         jsr     wait_next_pattern
         move.l  #text_glagla_3,d3
         lea.l   VRAIglagla33_data,a5
         lea.l   VRAIglagla33_sequence,a6
         jsr     animation
         jsr     wait_next_pattern
+
+        move.l  #$0000ffff,d4   ; 2
+        move.l  #$00000000,d5
+        jsr     picerase_bottomup
+        jsr     wait_next_pattern
         move.l  #$ffff0000,d4   ; 1
         move.l  #$00000000,d5
-        jsr     picerase_downup
-
+        jsr     picerase_rightleft
         jsr     wait_next_pattern
         move.l  #text_glagla_4,d3
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
         jsr     wait_next_pattern
-        move.l  #$ffffffff,d4   ; 3
-        move.l  #$00000000,d5
-        jsr     picerase_updown
 
         ;; Flush
+        move.l  #$ffffffff,d4   ; 3
+        move.l  #$00000000,d5
+        jsr     picerase_leftright
         jsr     wait_next_pattern
         lea     picture_logo,a3
         jsr     picdisplay
@@ -135,10 +155,10 @@ main:
         move.l  #100,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
+
         move.l  #$00000000,d4   ; 4
         move.l  #$ffff0000,d5
-        jsr     picerase_downup
-
+        jsr     picerase_topdown
         bra     .main_loop
 
         ;; Wait for any key press then return

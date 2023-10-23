@@ -3,8 +3,10 @@
 
         xdef picdisplay
         xdef picdisplay2
-        xdef picerase_downup
-        xdef picerase_updown
+        xdef picerase_bottomup
+        xdef picerase_topdown
+        xdef picerase_leftright
+        xdef picerase_rightleft
         xdef set_palette
         xdef xor_background
         xdef movepic_4colors
@@ -55,7 +57,7 @@ picdisplay:
 ;;; Erases the screen
 ;;; a4 address of video memory
 ;;; d4 and d5 are the 2 longs to be used as erase colors
-picerase_downup:
+picerase_bottomup:
         movem.l a6/d0/d3,-(sp)
         move.l  a4,a6                   ;
         add.l   #32000-DISPLAY_STEP,a6  ; a6 point to 1st line to draw
@@ -79,7 +81,7 @@ picerase_downup:
 ;;; Erases the screen from top to bottom
 ;;; a4 address of video memory
 ;;; d4 and d5 are the 2 longs to be used as erase colors
-picerase_updown:
+picerase_topdown:
         movem.l a4/a6/d0/d3,-(sp)
         move.l  a4,a6
         add.w   #32000,a4       ; Must stop there
@@ -97,6 +99,55 @@ picerase_updown:
         add.w   #DISPLAY_STEP,a6
         cmp.l   a4,a6
         blt     .loop
+
+        movem.l (sp)+,a4/a6/d0/d3
+        rts
+
+;;; Erases the screen from left to right
+;;; a4 address of video memory
+;;; d4 and d5 are the 2 longs to be used as erase colors
+picerase_leftright:
+        movem.l a4/a6/d0/d3,-(sp)
+        move.l  a4,a6
+        add.w   #160,a4       ; Must stop there
+.loop:
+        move.w  #0,d0
+.line_loop:
+        move.l  d4,(a6,d0.w)
+        move.l  d5,4(a6,d0.w)
+        add.w   #160,d0         ; next line
+        cmpi.w  #32000,d0
+        blt     .line_loop
+        ;; Wait loop
+        move.l  #1,d3
+        jsr     wait_hz_200
+        add.w   #8,a6           ; next column
+        cmp.l   a4,a6         ; end of line
+        blt     .loop
+
+        movem.l (sp)+,a4/a6/d0/d3
+        rts
+
+;;; Erases the screen from right to left
+;;; a4 address of video memory
+;;; d4 and d5 are the 2 longs to be used as erase colors
+picerase_rightleft:
+        movem.l a4/a6/d0/d3,-(sp)
+        move.l  a4,a6
+        add.w   #160-8,a6       ; Start there
+.loop:
+        move.w  #32000-160,d0
+.line_loop:
+        move.l  d4,(a6,d0.w)
+        move.l  d5,4(a6,d0.w)
+        sub.w   #160,d0         ; next line
+        bpl     .line_loop
+        ;; Wait loop
+        move.l  #1,d3
+        jsr     wait_hz_200
+        sub.w   #8,a6           ; previous column
+        cmp.l   a4,a6         ; end of line
+        bge     .loop
 
         movem.l (sp)+,a4/a6/d0/d3
         rts

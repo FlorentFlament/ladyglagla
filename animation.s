@@ -60,6 +60,10 @@ draw_char:
         rts
 
 ;;; d3 address of string to write
+;;; d6 duration of animation in hz_200 ticks
+;;;     1 beat is 160 hz_200 ticks
+;;;     16 beats animation - number of transitions (typically 1 or 2)
+;;;     (* 14 160) 2240 -> minus 10-20 margin -> 2230
 ;;; a4 address of video memory
 ;;; a5 address of animation data
 ;;; a6 address of animation sequence
@@ -76,7 +80,7 @@ animation:
         move.l  d0,4(sp)
         add.l   #25,4(sp)       ; time for next picture
         move.l  d0,8(sp)
-        add.l   #2380,8(sp)     ; time before end - 15 beats - one beat is 160 hz_200 ticks
+        add.l   d6,8(sp)     ; time before end
 
         move.l  (a5),a3         ; -> a3 palette address
         move.w  #0,d5           ; initialize sequence index in d5
