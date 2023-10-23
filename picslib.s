@@ -13,18 +13,14 @@
 DISPLAY_STEP = 24*160
 
 ;;; a0 must contain address of picture
+;;; a4 address of video memory
 ;;; All registers are saved then restored
 picdisplay:
         ;; d6 - physical screen address
         ;; d5 - base picture address
-        movem.l d0-d7/a0-a7,-(sp)
+        movem.l a3/a5/a6/d0/d3/d5/d6,-(sp)
         move.l  a0,d5
-
-        ;; Get address of video memory
-	move.w	#2,-(sp)	; Physbase function call
-	trap	#14		; Call XBIOS
-	addq.l	#2,sp
-	move.l	d0,d6		; Save physical screen ram base in d6
+        move.l  a4,d6   ; Save physical screen ram base in d6
 
         move.l  d5,a3
         jsr     set_palette
@@ -37,23 +33,32 @@ picdisplay:
         add.l   #32000-DISPLAY_STEP,a5         ; Move a block of DISPLAY_STEP data
         add.l   #32000-DISPLAY_STEP,a6         ;
 .picdisplay_loop:
-
         move.w  #DISPLAY_STEP-4,d0       ; Move long ints (4 bytes)
 .picdisplay_line_loop:                   ; Move a DISPLAY_STEP block 4 bytes at a time
         move.l  (a5,d0.w),(a6,d0.w)
         subq.w  #4,d0
         bpl     .picdisplay_line_loop
-
         ;; Wait loop
         move.l  #1,d3           ; Wait 1/200th of a second
         jsr     wait_hz_200
-
         sub.l   #DISPLAY_STEP,a5
         sub.l   #DISPLAY_STEP,a6
         cmp.l   d5,a5
         bge     .picdisplay_loop
 
-        movem.l (sp)+,d0-d7/a0-a7
+        ;; Last lines of uncompleted block to fill
+        add.l   #DISPLAY_STEP,a6
+        sub.l   d6,a6
+        subq.l  #4,a6
+        move.l  a6,d0
+        move.l  d5,a5
+        move.l  d6,a6
+.finalize_loop:                   ; Move a DISPLAY_STEP block 4 bytes at a time
+        move.l  (a5,d0.w),(a6,d0.w)
+        subq.w  #4,d0
+        bpl     .finalize_loop
+
+        movem.l (sp)+,a3/a5/a6/d0/d3/d5/d6
         rts
 
 ;;; All registers are saved then restored
