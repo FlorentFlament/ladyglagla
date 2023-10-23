@@ -3,7 +3,8 @@
 
         xdef picdisplay
         xdef picdisplay2
-        xdef picerase
+        xdef picerase_downup
+        xdef picerase_updown
         xdef set_palette
         xdef xor_background
         xdef movepic_4colors
@@ -11,7 +12,7 @@
 ;;; Display pictures by blocks to make them appear slowly
 ;;; 160 bytes per line
 ;;; 8 lines at a time
-DISPLAY_STEP = 20*160
+DISPLAY_STEP = 10*160
 
 ;;; a3 must contain address of picture
 ;;; a4 address of video memory
@@ -51,11 +52,10 @@ picdisplay:
         movem.l (sp)+,a3/a5/a6/d0/d3/d5/d6
         rts
 
-;;; All registers are saved then restored
 ;;; Erases the screen
 ;;; a4 address of video memory
 ;;; d4 and d5 are the 2 longs to be used as erase colors
-picerase:
+picerase_downup:
         movem.l a6/d0/d3,-(sp)
         move.l  a4,a6                   ;
         add.l   #32000-DISPLAY_STEP,a6  ; a6 point to 1st line to draw
@@ -74,6 +74,31 @@ picerase:
         bge     .loop
 
         movem.l (sp)+,a6/d0/d3
+        rts
+
+;;; Erases the screen from top to bottom
+;;; a4 address of video memory
+;;; d4 and d5 are the 2 longs to be used as erase colors
+picerase_updown:
+        movem.l a4/a6/d0/d3,-(sp)
+        move.l  a4,a6
+        add.w   #32000,a4       ; Must stop there
+.loop:
+        move.w  #0,d0
+.line_loop:
+        move.l  d4,(a6,d0.w)
+        move.l  d5,4(a6,d0.w)
+        addq.w  #8,d0
+        cmpi.w  #DISPLAY_STEP,d0
+        bmi     .line_loop
+        ;; Wait loop
+        move.l  #1,d3
+        jsr     wait_hz_200
+        add.w   #DISPLAY_STEP,a6
+        cmp.l   a4,a6
+        blt     .loop
+
+        movem.l (sp)+,a4/a6/d0/d3
         rts
 
 ;;; a3 address of picture (prefixed by palette)
