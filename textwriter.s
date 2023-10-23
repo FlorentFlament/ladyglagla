@@ -17,7 +17,7 @@ textwriter:
         trap    #1              ; Gemdos trap
         addq.l  #4,sp
 
-        move.l  #10,d3
+        move.l  #8,d3
         jsr     wait_hz_200
         add.l   #1,a3
         bra     .loop

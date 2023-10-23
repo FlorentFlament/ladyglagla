@@ -61,8 +61,12 @@ main:
         jsr     picdisplay
         lea     text_glafouk_1,a0
         jsr     textwriter
+        move.l  #100,d3         ; wait
+        jsr     wait_hz_200
         lea     text_glafouk_2,a0
         jsr     textwriter
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
 
         jsr     wait_next_pattern
         jsr     picerase
@@ -113,6 +117,8 @@ main:
         jsr     wait_hz_200
         jsr     wait_next_pattern
         jsr     picscratch_fx
+        move.l  #100,d3         ; wait
+        jsr     wait_hz_200
 
         jsr     wait_next_pattern
         bra     .main_loop

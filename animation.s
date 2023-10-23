@@ -72,11 +72,11 @@ animation:
         sub.l   #12,sp           ; Allocate 3 longs in the stack
         jsr     get_hz_200
         move.l  d0,0(sp)
-        add.l   #100,0(sp)       ; time for next character
+        add.l   #160,0(sp)       ; time for second character
         move.l  d0,4(sp)
         add.l   #25,4(sp)       ; time for next picture
         move.l  d0,8(sp)
-        add.l   #1120,8(sp)     ; time before end - 7 beats - one beat is 160 hz_200 ticks
+        add.l   #2380,8(sp)     ; time before end - 15 beats - one beat is 160 hz_200 ticks
 
         move.l  (a5),a3         ; -> a3 palette address
         move.w  #0,d5           ; initialize sequence index in d5
