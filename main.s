@@ -54,10 +54,6 @@ main:
 	addq.l	#2,sp
 	move.l	d0,a4		; Save physical screen ram base in a4
 
-;        ;; Initialize palette with first picture's
-;        lea     picture_callisto_glafouk,a3
-;        jsr     set_palette
-        ;; colors to try 4,5,6,10
         ;; picerase pattern
         move.l  #$00000000,d4   ; 5
         move.l  #$00000000,d5

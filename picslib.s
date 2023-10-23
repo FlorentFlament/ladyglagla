@@ -11,7 +11,7 @@
 ;;; Display pictures by blocks to make them appear slowly
 ;;; 160 bytes per line
 ;;; 8 lines at a time
-DISPLAY_STEP = 16*160
+DISPLAY_STEP = 20*160
 
 ;;; a3 must contain address of picture
 ;;; a4 address of video memory
@@ -48,18 +48,6 @@ picdisplay:
         cmp.l   d5,a5
         bge     .picdisplay_loop
 
-        ;; Last lines of uncompleted block to fill
-        add.l   #DISPLAY_STEP,a6
-        sub.l   d6,a6
-        subq.l  #4,a6
-        move.l  a6,d0
-        move.l  d5,a5
-        move.l  d6,a6
-.finalize_loop:                   ; Move a DISPLAY_STEP block 4 bytes at a time
-        move.l  (a5,d0.w),(a6,d0.w)
-        subq.w  #4,d0
-        bpl     .finalize_loop
-
         movem.l (sp)+,a3/a5/a6/d0/d3/d5/d6
         rts
 
@@ -69,7 +57,6 @@ picdisplay:
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase:
         movem.l a6/d0/d3,-(sp)
-
         move.l  a4,a6                   ;
         add.l   #32000-DISPLAY_STEP,a6  ; a6 point to 1st line to draw
 .loop:
@@ -85,18 +72,6 @@ picerase:
         sub.l   #DISPLAY_STEP,a6
         cmp.l   a4,a6
         bge     .loop
-
-        ;; Last pixels to clear
-        add.l   #DISPLAY_STEP,a6
-        sub.l   a4,a6
-        subq.l  #8,a6
-        move.l  a6,d0
-        move.l  a4,a6
-.finalize_loop:
-        move.l  d4,(a6,d0.w)
-        move.l  d5,4(a6,d0.w)
-        subq.w  #8,d0
-        bpl     .finalize_loop
 
         movem.l (sp)+,a6/d0/d3
         rts
