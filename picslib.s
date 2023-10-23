@@ -10,7 +10,7 @@
 ;;; Display pictures by blocks to make them appear slowly
 ;;; 160 bytes per line
 ;;; 8 lines at a time
-DISPLAY_STEP = 8*160
+DISPLAY_STEP = 24*160
 
 ;;; a0 must contain address of picture
 ;;; All registers are saved then restored
@@ -65,19 +65,30 @@ picerase:
         move.l  a4,a6                   ;
         add.l   #32000-DISPLAY_STEP,a6  ; a6 point to 1st line to draw
 .loop:
-        move.w  #DISPLAY_STEP-4,d0
+        move.w  #DISPLAY_STEP-8,d0
 .line_loop:
-        move.l  #0,(a6,d0.w)
-        subq.w  #4,d0
+        move.l  #$ffffffff,(a6,d0.w)
+        move.l  #$00000000,4(a6,d0.w)
+        subq.w  #8,d0
         bpl     .line_loop
-
         ;; Wait loop
         move.l  #1,d3
         jsr     wait_hz_200
-
         sub.l   #DISPLAY_STEP,a6
         cmp.l   a4,a6
         bge     .loop
+
+        ;; Last pixels to clear
+        add.l   #DISPLAY_STEP,a6
+        sub.l   a4,a6
+        subq.l  #8,a6
+        move.l  a6,d0
+        move.l  a4,a6
+.finalize_loop:
+        move.l  #$ffffffff,(a6,d0.w)
+        move.l  #$00000000,4(a6,d0.w)
+        subq.w  #8,d0
+        bpl     .finalize_loop
 
         movem.l (sp)+,a6/d0/d3
         rts

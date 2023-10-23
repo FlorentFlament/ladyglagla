@@ -59,14 +59,10 @@ main:
         jsr     wait_next_pattern
         lea     picture_callisto_glafouk,a0
         jsr     picdisplay
-        jsr     wait_next_pattern
         lea     text_glafouk_1,a0
         jsr     textwriter
-        jsr     wait_next_pattern
         lea     text_glafouk_2,a0
         jsr     textwriter
-        move.l  #600,d3         ; wait
-        jsr     wait_hz_200
 
         jsr     wait_next_pattern
         jsr     picerase
@@ -106,17 +102,14 @@ main:
         jsr     wait_next_pattern
         lea     picture_logo,a0
         jsr     picdisplay
-        move.l  #600,d3         ; wait
+        move.l  #500,d3         ; wait
         jsr     wait_hz_200
-        jsr     wait_next_pattern
-        lea     picture_logo,a5
-        jsr     picgum_fx
         jsr     wait_next_pattern
         jsr     picscratch_fx
         jsr     wait_next_pattern
         lea     text_credits,a0
         jsr     textwriter
-        move.l  #600,d3         ; wait
+        move.l  #500,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
         jsr     picscratch_fx
@@ -218,11 +211,11 @@ text_glagla_4:
 text_credits:
         ;; colors are based on Flush logo palette
         dc.b    $1b,'c',' '+1       ; set background color to black
-        dc.b    $1b,'b',' '+12       ; set foreground color to red
+        dc.b    $1b,'b',' '+12      ; set foreground color to red
         dc.b    $1b,'Y',' '+10,' '+6,"Graphics: Yogib33r / Callisto"
         dc.b    $1b,'b',' '+5       ; set color to yellow
         dc.b    $1b,'Y',' '+12,' '+13,"Music: Glafouk"
-        dc.b    $1b,'b',' '+9            ; set foreground color to green
+        dc.b    $1b,'b',' '+9       ; set foreground color to green
         dc.b    $1b,'Y',' '+14,' '+14,"Code: Flewww"
         dc.b    0
 

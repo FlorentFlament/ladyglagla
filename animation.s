@@ -76,7 +76,7 @@ animation:
         move.l  d0,4(sp)
         add.l   #25,4(sp)       ; time for next picture
         move.l  d0,8(sp)
-        add.l   #1280,8(sp)     ; time before end - one beat is 160 hz_200 ticks
+        add.l   #1120,8(sp)     ; time before end - 7 beats - one beat is 160 hz_200 ticks
 
         move.l  (a5),a3         ; -> a3 palette address
         move.w  #0,d5           ; initialize sequence index in d5

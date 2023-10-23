@@ -41,10 +41,6 @@ get_hz_200_sup:
 wait_next_pattern:
         move.w  d0,-(sp)
 .loop:
-        ;; Wait for even beat
-        move.w  beat_cnt,d0
-        and.w   #$01,d0
-        beq     .loop
         ;; Wait for next beat
         move.w  tempo_cnt,d0
         bne     .loop
