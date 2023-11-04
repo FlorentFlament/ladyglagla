@@ -4,22 +4,14 @@
 import math
 from asmlib import render
 
-def gum_func():
-#    return [15*math.sin(2*math.pi/201 * x) + x for x in range(201)]
-    return [7*math.sin(4*math.pi/201 * x) + x for x in range(201)]
+def gum_func(x):
+    return 10*math.sin(2*math.pi/200 * x)
 
-def gum():
-    d = gum_func()
-    D = []
-    for i in range(200):
-        D.append(round(d[i+1] - sum(D[:i])))
-    return D
+def gum_table():
+    return [x + round(gum_func(x)) for x in range(200)]
 
 def main():
-    D = gum()
-    #print(sum(D))
-    #print(render([1]*200, unit='dc.b'))
+    D = gum_table()
     print(render(D, unit='dc.b'))
-    #print(render([1]*200, unit='dc.b'))
 
 main()
