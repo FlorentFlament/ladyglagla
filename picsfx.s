@@ -4,6 +4,8 @@
 
         xref wait_hz_200
         xref set_palette
+        xref picstretch_d3
+        xref picstretch_d4
 
 
 ;;; a5 - base picture address
@@ -22,21 +24,23 @@ picgum_fx:
 
 ;;; a5 - animation address
 picgum_fx_animation:
-        movem.l a3/a5/d2-d3,-(sp)
+        movem.l a3/a5/d2-d5,-(sp)
         move.l  (a5),a3         ; -> a3 palette address
         jsr     set_palette
-        ;; Data starts after palette, i.e 32bytes after start of data
-        move.l  4(a5),a5
-        move.w  #2,d3
+        move.l  4(a5),a5        ; next long is address of first animation picture data
+        move.w  #20,d5           ; 3 loops
 .big_loop:
         move.w  #0,d2
 .loop:
+        ;; Animation parameters
+        move.w  picstretch_d3,d3
+        move.w  picstretch_d4,d4
         jsr     picdisplay_stretched_4colors
-        addq.w  #1,d2
+        addq.w  #2,d2
         cmpi.w  #200,d2
         blt     .loop
-        dbra    d3,.big_loop
-        movem.l (sp)+,a3/a5/d2-d3
+        dbra    d5,.big_loop
+        movem.l (sp)+,a3/a5/d2-d5
         rts
 
 ;;; Palette is set already
@@ -85,10 +89,11 @@ picdisplay_stretched:
 ;;; a4 - physical screen base address
 ;;; a5 - base picture address
 ;;; d2 - index in displacement table
+;;; d3,d4 - speed in the displacement table is d3/d4
 ;;; Uses a2,a3,a4,a6
-;;; Uses d0,d1,d2
+;;; Uses d0,d1,d2,d4
 picdisplay_stretched_4colors:
-        movem.l a2-a6/d0-d2,-(sp)     ; save d2 and a5 for further use
+        movem.l a2-a6/d0-d2/d5,-(sp)     ; save d2 and a5 for further use
 	move.l	a4,a6		; Save physical screen ram base in a6
 
         lea.l   16000(a5),a4    ; Compute end of picture in a4
@@ -98,13 +103,27 @@ picdisplay_stretched_4colors:
         ;; 2 200Hz ticks for a 1 plan display loop
         ;; 3 200Hz ticks for a 2 plans display loop
         ;; 6 200Hz ticks for a 4 plans display loop
+
+        move.w  d4,d5           ; Using d5 as a counter
+        subi.w  #1,d5
 .picdisplay_loop:
         ;; a5 = base picture addr
         ;; a6 = base video memory addr
         REPT 20
         move.l  REPTN*4(a5),REPTN*8(a6)
         ENDR
+
+        ;; Compute how many items to move forward in the table, i.e d3/d5
+        ;; Substract d3 from d5
+        sub.w   d3,d5
+        ;; As long as d5 <0 increase d5 by d4 and increase d2 by 1
+        bpl     .d5_positive
+.d5_addloop:
         addq.w  #1,d2           ; increase line count
+        add.w   d4,d5
+        bmi     .d5_addloop
+.d5_positive:
+
         cmpi.l  #200,d2         ; mod 200 (table is 200 long)
         blt     .mod_200
         sub.l   #200,d2
@@ -125,7 +144,7 @@ picdisplay_stretched_4colors:
         cmp.l   a2,a6         ; display 200 lines
         blt     .picdisplay_loop
 
-        movem.l (sp)+,a2-a6/d0-d2
+        movem.l (sp)+,a2-a6/d0-d2/d5
         rts
 
 picscratch_fx:
