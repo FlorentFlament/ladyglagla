@@ -41,8 +41,8 @@ main:
         ;; Initialize demo
         move.w  #MUSIC_TEMPO-1,tempo_cnt
         move.w  #0,beat_cnt
-        move.w  #5,picstretch_d3
-        move.w  #3,picstretch_d4
+        move.w  #1,picstretch_d3
+        move.w  #1,picstretch_d4
 
         ;; Initialize music player
         lea     music_data,a0

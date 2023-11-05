@@ -9,7 +9,7 @@ def render(data, perline=8, unit='dc.w'):
         else:
             res.append(', ')
         if (unit == 'dc.b'):
-            res.append("${:02x}".format(v))
+            res.append("${:02x}".format(v if v>=0 else v+2**8))
         else:
-            res.append("${:04x}".format(v))
+            res.append("${:04x}".format(v if v>=0 else v+2**16))
     return ''.join(res)

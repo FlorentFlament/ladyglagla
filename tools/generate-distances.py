@@ -5,13 +5,13 @@ import math
 from asmlib import render
 
 def gum_func(x):
-    return 20*math.sin(2*math.pi/256 * x)
+    return 10*math.sin(2*math.pi/256 * x)
 
 def gum_table():
-    return [x + round(gum_func(x)) for x in range(256)]
+    return [80*round(gum_func(x)) for x in range(256)]
 
 def main():
     D = gum_table()
-    print(render(D, unit='dc.b'))
+    print(render(D, unit='dc.w'))
 
 main()
