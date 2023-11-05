@@ -67,7 +67,7 @@ picgum_fx_animation:
 ;;; d2.b - index in displacement table in [0, 256[
 ;;; d3,d4 - speed in the displacement table is d3/d4
 ;;; Uses a2,a3,a4
-;;; Uses d0,d1,d2,d4
+;;; Uses d0,d5,d6
 picdisplay_stretched_4colors:
         movem.l a2-a4/d0/d5-d6,-(sp)    ; save d2 and a5 for further use
 
