@@ -11,48 +11,49 @@
 ;;; a5 - animation address
 picgum_fx_animation:
         movem.l a0-a6/d0-d7,-(sp)
-        sub.l   #(256*2),sp
-        move.l  sp,a1           ; storing x80 table address in a1
         sub.l   #(256*80),sp    ; Allocating RAM for padded picture
 
         move.l  (a5),a3         ; -> a3 palette address
         jsr     set_palette
 
-        ;; Compute x80 table
-        move.w  #0,d2           ; index in table
-        move.w  #0,d3           ; i*80 in d3
-.table_80_loop:
-        move.w  d3,(a1,d2)
-        addq.w  #2,d2
-        addi.w  #80,d3
-        cmpi.w  #(256*2),d2
-        blt     .table_80_loop
-
+        move.l  sp,a2
         ;; Copy padded image on the stack
         move.w  #0,d2
+.pre_padloop:
+        move.l  #0,(a2,d2)
+        addq.w  #4,d2
+        cmpi    #(28*80),d2
+        blt     .pre_padloop
+
+        add.w   #(28*80),a2
+        move.l  4(a5),a3         ; -> a3 image address
+        move.w  #0,d2
 .copy_loop:
-        move.l  (a3,d2),(sp,d2)
+        move.l  (a3,d2),(a2,d2)
         addq.w  #4,d2
         cmpi    #(200*80),d2
         blt     .copy_loop
-.pad_loop:
-        move.l  #0,(sp,d2)
+
+        add.w   #(200*80),a2
+        move.w  #0,d2
+.post_padloop:
+        move.l  #0,(a2,d2)
         addq.w  #4,d2
-        cmpi    #(256*80),d2
-        blt     .pad_loop
+        cmpi    #(28*80),d2
+        blt     .post_padloop
 
         move.l  a4,a0                   ; physical screen address
         move.l  sp,a1                   ; picture address
+        add.w   #(28*80),a1             ; Add 28 padding lines before picture
         lea     stretch_table,a2        ; sin table address
-;        move.w  #(80*100),d1
-        move.w  #40,d1
+        move.w  #(30*80),d1
         move.w  #0,d2
         move.w  #600,d7
 .loop:
         ;; Animation parameters
-        move.w  #1,d3
-        move.w  #1,a3
-        move.w  #7,d4
+        move.w  #4,d3
+        move.w  #5,a3
+        move.w  #2,d4
         move.w  #4,a4
         jsr     picdisplay_stretched_4colors
         add.w   #14,d2
@@ -60,7 +61,6 @@ picgum_fx_animation:
         dbra    d7,.loop
 
         add.l   #(256*80),sp
-        add.l   #(256*2),sp
         movem.l (sp)+,a0-a6/d0-d7
         rts
 
