@@ -1,8 +1,32 @@
 ;;; Picture stretching effect
         xdef fx_picstretch_animation
         xdef fx_wave_animation
+        xdef wait_next_vbl
 
+        xref get_hz_200
         xref set_palette
+
+;;; d6 contains last hz_200 value we waited for
+;;; wait for 4 hz_200
+;;; Ensures we don't update the picture twice in the same VBL
+;;; https://freemint.github.io/tos.hyp/en/bios_sysvars.html
+wait_next_vbl:
+        movem.l d0-d2/a0-a2,-(sp)
+        ;; TODO: Change picture to animate the thing
+
+        ;; Ensure we're not goind too fast
+        addq.l  #4,d6           ; Next hz_200 to wait for
+        jsr     get_hz_200
+        cmp.l   d6,d0
+        bge     .after_wait
+        move.w  #37,-(sp)    ; Vsync XBIOS function. Wait for next vertical sync
+        trap    #14          ; Call XBIOS
+        addq.l  #2,sp        ; Correct stack
+        jsr     get_hz_200
+.after_wait:
+        move.l  d0,d6           ; Update current hz_200
+        movem.l (sp)+,d0-d2/a0-a2
+        rts
 
 ;;; a4 - physical screen base address
 ;;; a5 - animation address
@@ -26,6 +50,7 @@ fx_picstretch_animation:
         move.w  #1000,a4
 
         ;; Animation Loop
+        move.w  #0,d6           ; Use d6 to keep track of VBL
         move.w  #600,d7
 .loop:
         ;; Animation updated parameters
@@ -46,6 +71,7 @@ fx_picstretch_animation:
         add.w   d0,d1   ; *80
 
         ;; Display picture
+        jsr     wait_next_vbl   ; d6 contains last vbl
         jsr     picdisplay_stretched_4colors
         dbra    d7,.loop
 
