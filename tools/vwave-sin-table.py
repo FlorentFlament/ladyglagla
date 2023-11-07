@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate table with the distances from the previous point on a curve"""
+"""Generate a vertical wave sinus table"""
 
 import math
 from asmlib import render
