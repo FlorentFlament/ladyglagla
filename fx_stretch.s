@@ -4,50 +4,61 @@
 
         xref set_palette
 
+;;; a2 - target address for padded picture
+;;; a5 - animation address
+;;; Return values
+;;; a1 - contains padded picture address
+;;; Uses a2-a3,d2
+init_padded_picture_buffer:
+        movem.l a2-a3/d2,-(sp)
+
+        ;; set palette
+        move.l  (a5),a3
+        jsr     set_palette
+
+        macro padloop
+        move.w  #0,d2
+.padloop\@:                     ; appends a unique ID to the label
+        move.l  #0,(a2,d2)
+        addq.w  #4,d2
+        cmpi    #(28*80),d2
+        blt     .padloop\@
+        endm
+
+        ;; Copy padded image on the stack
+        padloop
+
+        add.w   #(28*80),a2
+        move.l  a2,a1           ; set return value
+        move.l  4(a5),a3        ; -> a3 image address
+        move.w  #0,d2
+.copy_loop:
+        move.l  (a3,d2),(a2,d2)
+        addq.w  #4,d2
+        cmp.w   #(200*80),d2
+        blt     .copy_loop
+
+        add.w   #(200*80),a2
+        padloop
+
+        movem.l (sp)+,a2-a3/d2
+        rts
+
 ;;; a4 - physical screen base address
 ;;; a5 - animation address
 picgum_fx_animation:
         movem.l a0-a6/d0-d7,-(sp)
         sub.l   #(256*80),sp    ; Allocating RAM for padded picture
 
-        ;; set palette
-        move.l  (a5),a3
-        jsr     set_palette
-
-        ;; Copy padded image on the stack
-        ;; This can be done more beautifully at some point
         move.l  sp,a2
-        move.w  #0,d2
-.pre_padloop:
-        move.l  #0,(a2,d2)
-        addq.w  #4,d2
-        cmpi    #(28*80),d2
-        blt     .pre_padloop
-
-        add.w   #(28*80),a2
-        move.l  4(a5),a3         ; -> a3 image address
-        move.w  #0,d2
-.copy_loop:
-        move.l  (a3,d2),(a2,d2)
-        addq.w  #4,d2
-        cmpi    #(200*80),d2
-        blt     .copy_loop
-
-        add.w   #(200*80),a2
-        move.w  #0,d2
-.post_padloop:
-        move.l  #0,(a2,d2)
-        addq.w  #4,d2
-        cmpi    #(28*80),d2
-        blt     .post_padloop
+        jsr init_padded_picture_buffer
+        ;; a1 contains padded picture address
 
         ;; using a5 to fetch data from picstretch_table
         lea     picstretch_table,a5
 
         ;; Animation initial parameters
         move.l  a4,a0                   ; physical screen address
-        move.l  sp,a1                   ; picture address
-        add.w   #(28*80),a1             ; Add 28 padding lines before picture
         lea     wave_table,a2        ; sin table address
         ;move.w  #0,d1                ; pic initial offset
         move.w  #0,d2                ; wave sin initial offset
