@@ -1,16 +1,14 @@
         xdef tempo_cnt
         xdef beat_cnt
-        xdef picstretch_d3
-        xdef picstretch_d4
         xdef main
 
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
         xref set_palette
+
         xref picdisplay
         xref picdisplay2
-        xref picgum_fx_animation
         xref picerase_bottomup
         xref picerase_topdown
         xref picerase_leftright
@@ -31,6 +29,9 @@
         xref VRAI_REglagla04_data
         xref VRAI_REglagla04_sequence
 
+        xref fx_picstretch_animation
+        xref fx_wave_animation
+
 MUSIC_TEMPO=40                  ; 75 bpm
 
         section code
@@ -41,8 +42,6 @@ main:
         ;; Initialize demo
         move.w  #MUSIC_TEMPO-1,tempo_cnt
         move.w  #0,beat_cnt
-        move.w  #1,picstretch_d3
-        move.w  #1,picstretch_d4
 
         ;; Initialize music player
         lea     music_data,a0
@@ -159,7 +158,7 @@ main:
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
 ;        jsr     animation
-        jsr     picgum_fx_animation
+        jsr     fx_wave_animation
         jsr     wait_next_pattern
 
         move.l  #2230,d6        ; duration of animation - (- (* 14 160) 10)
@@ -176,7 +175,7 @@ main:
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
 ;        jsr     animation
-        jsr     picgum_fx_animation
+        jsr     fx_picstretch_animation
         jsr     wait_next_pattern
 
         move.l  #$ffff0000,d4   ; 1
@@ -191,7 +190,7 @@ main:
         lea.l   VRAIglagla33_data,a5
         lea.l   VRAIglagla33_sequence,a6
 ;        jsr     animation
-        jsr     picgum_fx_animation
+        jsr     fx_wave_animation
         jsr     wait_next_pattern
 
         move.l  #$0000ffff,d4   ; 2
@@ -206,7 +205,7 @@ main:
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
 ;        jsr     animation
-        jsr     picgum_fx_animation
+        jsr     fx_picstretch_animation
         jsr     wait_next_pattern
 
         move.l  #$0000ffff,d4   ; 2
@@ -310,5 +309,3 @@ text_credits:
         section bss
 tempo_cnt:      dcb.w 1
 beat_cnt:       dcb.w 1
-picstretch_d3:        dcb.w 1
-picstretch_d4:        dcb.w 1

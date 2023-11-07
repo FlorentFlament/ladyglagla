@@ -1,8 +1,56 @@
 ;;; Picture stretching effect
-        xdef picgum_fx_animation
-        xdef picdisplay_stretched_4colors
+        xdef fx_picstretch_animation
+        xdef fx_wave_animation
 
         xref set_palette
+
+;;; a4 - physical screen base address
+;;; a5 - animation address
+fx_picstretch_animation:
+        movem.l a0-a6/d0-d7,-(sp)
+
+        ;; set palette
+        move.l  (a5),a3
+        jsr     set_palette
+        ;; set image data
+        move.l  4(a5),a1
+        ;; using a5 to fetch data from picstretch_table
+        lea     picstretch_table,a5
+
+        ;; Animation initial parameters
+        move.l  a4,a0           ; physical screen address
+        lea     wave_table,a2   ; sin table address
+        move.w  #0,d2           ; wave sin initial offset
+        move.w  #100,a3
+        move.w  #1,d4           ; d4/a4 sin stretch ratio
+        move.w  #1000,a4
+
+        ;; Animation Loop
+        move.w  #600,d7
+.loop:
+        ;; Animation updated parameters
+        ;; Compute image vertical stretching
+        move.w  d7,d0
+        and.w   #$3f,d0         ; 64 items table
+        asl.w   #1,d0
+        move.w  (a5,d0),d3      ; d3 is in [50; 200]
+        ;; Compute offset in picture
+        move.w  #100,d1
+        sub.w   d3,d1
+        bpl     .d1_positive
+        add.w   #200,d1         ; Add picture size
+.d1_positive:
+        asl.w   #4,d1   ; *16
+        move.w  d1,d0
+        asl.w   #2,d1   ; *64
+        add.w   d0,d1   ; *80
+
+        ;; Display picture
+        jsr     picdisplay_stretched_4colors
+        dbra    d7,.loop
+
+        movem.l (sp)+,a0-a6/d0-d7
+        rts
 
 ;;; a2 - target address for padded picture
 ;;; a5 - animation address
@@ -46,7 +94,7 @@ init_padded_picture_buffer:
 
 ;;; a4 - physical screen base address
 ;;; a5 - animation address
-picgum_fx_animation:
+fx_wave_animation:
         movem.l a0-a6/d0-d7,-(sp)
         sub.l   #(256*80),sp    ; Allocating RAM for padded picture
 
@@ -59,49 +107,31 @@ picgum_fx_animation:
 
         ;; Animation initial parameters
         move.l  a4,a0                   ; physical screen address
-        lea     wave_table,a2        ; sin table address
-        ;move.w  #0,d1                ; pic initial offset
-        move.w  #0,d2                ; wave sin initial offset
-        ;move.w  #200,d3         ; d3/a3 pic stretch ratio
-        move.w  #100,a3
-        move.w  #1,d4           ; d4/a4 sin stretch ratio
-        move.w  #1000,a4
+        lea     wave_table,a2   ; sin table address
+        move.w  #0,d1           ; pic initial offset
+        move.w  #0,d2           ; wave sin initial offset
+        move.w  #1,d3           ; d3/a3 pic stretch ratio
+        move.w  #1,a3
+        ;move.w  #0,d4           ; d4/a4 sin stretch ratio (useless here)
+        move.w  #100,a4
 
         ;; Animation Loop
         move.w  #600,d7
 .loop:
         ;; Animation parameters
-
-        ;; pic offset
-;        add.w   #80,d1
-;        cmp.w   #(80*200),d1
-;        blt     .mod_200
-;        sub.w   #(80*200),d1
-.mod_200:
         ;; sin offset
-;        add.w   #18,d2
-;        and.w   #$01ff,d2
-
-        ;; Compute image vertical stretching
-        move.w  d7,d0
-        and.w   #$3f,d0         ; 64 items table
-        asl.w   #1,d0
-        move.w  (a5,d0),d3      ; d3 is in [50; 200]
-        ;; Compute offset in picture
-        move.w  #100,d1
-        sub.w   d3,d1
-        bpl     .d1_positive
-        add.w   #200,d1         ; Add picture size
-.d1_positive:
-        asl.w   #4,d1   ; *16
-        move.w  d1,d0
-        asl.w   #2,d1   ; *64
-        add.w   d0,d1   ; *80
+        add.w   #18,d2          ; offset must be even
+        and.w   #$01ff,d2
 
         ;; Display picture
         jsr     picdisplay_stretched_4colors
 
-;        add.w   #1,d4
+        ;; Compute wave stretching
+        move.w  d7,d0
+        lsr.w   #2,d0
+        and.w   #$3f,d0         ; 64 items table
+        asl.w   #1,d0
+        move.w  (a5,d0),d4      ; d4 is in [50; 200]
         dbra    d7,.loop
 
         add.l   #(256*80),sp
