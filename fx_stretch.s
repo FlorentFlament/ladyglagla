@@ -43,16 +43,15 @@ picgum_fx_animation:
 
         ;; using a5 to fetch data from picstretch_table
         lea     picstretch_table,a5
-        
+
         ;; Animation initial parameters
         move.l  a4,a0                   ; physical screen address
         move.l  sp,a1                   ; picture address
         add.w   #(28*80),a1             ; Add 28 padding lines before picture
         lea     wave_table,a2        ; sin table address
-        move.w  #(50*80),d1                ; pic initial offset
+        ;move.w  #0,d1                ; pic initial offset
         move.w  #0,d2                ; wave sin initial offset
-        move.w  #333,d3         ; d3/a3 pic stretch ratio
-;        move.w  #266,a3
+        ;move.w  #200,d3         ; d3/a3 pic stretch ratio
         move.w  #100,a3
         move.w  #1,d4           ; d4/a4 sin stretch ratio
         move.w  #1000,a4
@@ -61,7 +60,6 @@ picgum_fx_animation:
         move.w  #600,d7
 .loop:
         ;; Animation parameters
-        jsr     picdisplay_stretched_4colors
 
         ;; pic offset
 ;        add.w   #80,d1
@@ -72,21 +70,26 @@ picgum_fx_animation:
         ;; sin offset
 ;        add.w   #18,d2
 ;        and.w   #$01ff,d2
-        
+
         ;; Compute image vertical stretching
         move.w  d7,d0
-        and.w   #$3f,d0
+        and.w   #$3f,d0         ; 64 items table
         asl.w   #1,d0
-        move.w  (a5,d0),d3
-;        ;; Compute offset in picture
-;        move.w  d3,d1
-;        sub.w   #100,d1
-;        asl.w   #4,d1   ; *16
-;        move.w  d1,d0
-;        asl.w   #2,d1   ; *64
-;        add.w   d0,d1   ; *80
-        
-        
+        move.w  (a5,d0),d3      ; d3 is in [50; 200]
+        ;; Compute offset in picture
+        move.w  #100,d1
+        sub.w   d3,d1
+        bpl     .d1_positive
+        add.w   #200,d1         ; Add picture size
+.d1_positive:
+        asl.w   #4,d1   ; *16
+        move.w  d1,d0
+        asl.w   #2,d1   ; *64
+        add.w   d0,d1   ; *80
+
+        ;; Display picture
+        jsr     picdisplay_stretched_4colors
+
 ;        add.w   #1,d4
         dbra    d7,.loop
 
@@ -166,7 +169,7 @@ picdisplay_stretched_4colors:
 
         movem.l (sp)+,a0-a6/d0-d7       ; restore registers from stack
         rts
-        
+
 
         section wave_table,data
 wave_table:
@@ -204,11 +207,11 @@ wave_table:
         dc.w $ff60, $ff60, $ffb0, $ffb0, $ffb0, $ffb0, $0000, $0000
 
 picstretch_table:
-	dc.w $007d, $0084, $008c, $0093, $009a, $00a0, $00a7, $00ad
-	dc.w $00b2, $00b7, $00bb, $00bf, $00c2, $00c5, $00c7, $00c8
-	dc.w $00c8, $00c8, $00c7, $00c5, $00c2, $00bf, $00bb, $00b7
-	dc.w $00b2, $00ad, $00a7, $00a0, $009a, $0093, $008c, $0084
-	dc.w $007d, $0076, $006e, $0067, $0060, $005a, $0053, $004d
-	dc.w $0048, $0043, $003f, $003b, $0038, $0035, $0033, $0032
-	dc.w $0032, $0032, $0033, $0035, $0038, $003b, $003f, $0043
-	dc.w $0048, $004d, $0053, $005a, $0060, $0067, $006e, $0076
+        dc.w $007d, $0084, $008c, $0093, $009a, $00a0, $00a7, $00ad
+        dc.w $00b2, $00b7, $00bb, $00bf, $00c2, $00c5, $00c7, $00c8
+        dc.w $00c8, $00c8, $00c7, $00c5, $00c2, $00bf, $00bb, $00b7
+        dc.w $00b2, $00ad, $00a7, $00a0, $009a, $0093, $008c, $0084
+        dc.w $007d, $0076, $006e, $0067, $0060, $005a, $0053, $004d
+        dc.w $0048, $0043, $003f, $003b, $0038, $0035, $0033, $0032
+        dc.w $0032, $0032, $0033, $0035, $0038, $003b, $003f, $0043
+        dc.w $0048, $004d, $0053, $005a, $0060, $0067, $006e, $0076
