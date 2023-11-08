@@ -3,7 +3,7 @@
 
         section VRAIglagla33_data,data
 VRAIglagla33_sequence:
-        dc.b 1,2,3,4,1,2,3,4,0,0        ; 16 bits alignment
+        dc.w 1,2,3,4,1,2,3,4,0
 VRAIglagla33_data:
         dc.l VRAIglagla33_0001_palette
         dc.l VRAIglagla33_0001_data

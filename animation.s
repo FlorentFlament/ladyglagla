@@ -26,8 +26,7 @@ spinlock_hz200_3:
 ;;; d5 index in sequence table
 draw_pic:
         movem.l d6/a3,-(sp)
-        move.w  #0,d6           ; inialize d6 word
-        move.b  (a6,d5.w),d6    ; retrieve index in data table from sequence table
+        move.w  (a6,d5.w),d6    ; retrieve index in data table from sequence table
 .seq_loop:
         asl.w   #2,d6           ; compute index in data table
         move.l  (a5,d6.w),a3

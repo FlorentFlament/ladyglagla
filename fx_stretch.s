@@ -2,6 +2,7 @@
         xdef fx_picstretch_animation
         xdef fx_wave_animation
         xdef wait_next_vbl
+        xdef get_current_image_address
 
         xref get_hz_200
         xref set_palette
@@ -28,32 +29,85 @@ wait_next_vbl:
         movem.l (sp)+,d0-d2/a0-a2
         rts
 
+;;; a6 contains the address of the following animation structure:
+;;;  0(a6) - long - address of images sequence table
+;;;  4(a6) - long - address of images pointers
+;;;  8(a6) - long - time of next animation image
+;;; 12(a6) - word - index of current image in sequence table
+;;;
+;;; a1 - returns the current image address in a1
+;;; Index in sequence table and time of next animation are updated
+get_current_image_address:
+        movem.l a0/d0-d3,-(sp)
+        move.l  0(a6),a0        ; sequence table address
+        move.l  4(a6),a1        ; images pointers table addess
+        move.l  8(a6),d2        ; time of next animation image
+        move.w  12(a6),d3       ; index in sequence table
+
+        ;; Is it time for new animation image ?
+        jsr     get_hz_200      ; into d0
+        cmp.l   d2,d0
+        blt     .image_uptodate
+        ;; time of next image has been reached
+        add.w   #25,d0          ; time of next change
+        move.l  d0,8(a6)
+
+        addq.w  #2,d3           ; increase sequence index - sequence of words
+        move.w  (a0,d3),d1      ; fetch image index
+        bne     .store_sequence_index ;
+        ;; if image index is 0 restart sequence from 0
+        move.w  #0,d3
+.store_sequence_index:
+        move.w  d3,12(a6)       ; save current index in sequence table
+
+.image_uptodate:
+        move.w  (a0,d3),d1      ; fetch image index from sequence table
+        asl.w   #2,d1           ; Convert to address index
+        move.l  (a1,d1),a1      ; fetch image address to a1
+
+        movem.l (sp)+,a0/d0-d3
+        rts
+
 ;;; a4 - physical screen base address
-;;; a5 - animation address
+;;; a5 - animation data (pictures' addresses) address
+;;; a6 - animation sequence address
 fx_picstretch_animation:
         movem.l a0-a6/d0-d7,-(sp)
+        sub.w   #14,sp           ; Allocate 3 longs and 1 word
+        ;;  0(sp) - long - address of images sequence table
+        ;;  4(sp) - long - address of images pointers
+        ;;  8(sp) - long - time of next animation image
+        ;; 12(sp) - word - index of current image in sequence table
+
+        ;; Initialize animation structure
+        move.l  a6,0(sp)
+        move.l  a5,4(sp)
+        move.l  #0,8(sp)
+        move.w  #0,12(sp)
 
         ;; set palette
         move.l  (a5),a3
         jsr     set_palette
-        ;; set image data
-        move.l  4(a5),a1
-        ;; using a5 to fetch data from picstretch_table
-        lea     picstretch_table,a5
 
         ;; Animation initial parameters
         move.l  a4,a0           ; physical screen address
+        ;; a1 - image data is computed in the display loop
         lea     wave_table,a2   ; sin table address
+        ;; d1 -  pic initial offset - is computed in the display loop
         move.w  #0,d2           ; wave sin initial offset
-        move.w  #100,a3
+        ;; d3 is computed in the picture display loop
+        move.w  #100,a3         ; d3/a3 pic stretch ratio
         move.w  #1,d4           ; d4/a4 sin stretch ratio
         move.w  #1000,a4
+        lea     picstretch_table,a5
 
         ;; Animation Loop
         move.w  #0,d6           ; Use d6 to keep track of VBL
         move.w  #600,d7
 .loop:
         ;; Animation updated parameters
+        move.l  sp,a6
+        jsr     get_current_image_address ; into a1
         ;; Compute image vertical stretching
         move.w  d7,d0
         and.w   #$3f,d0         ; 64 items table
@@ -71,10 +125,12 @@ fx_picstretch_animation:
         add.w   d0,d1   ; *80
 
         ;; Display picture
+        ;; Maybe we don't need to wait for next VBL in fact
         jsr     wait_next_vbl   ; d6 contains last vbl
         jsr     picdisplay_stretched_4colors
         dbra    d7,.loop
 
+        add.w   #14,sp           ; Allocate 3 longs and 1 word
         movem.l (sp)+,a0-a6/d0-d7
         rts
 

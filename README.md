@@ -1,4 +1,16 @@
-ideas:
+# Todos
+
+- Animation pendant les deformations
+- Chemins plus sophisitiqués des déformations
+- Ecrans de transition
+  1.
+  "This demo was not done by ChatGPT"
+  "Even though we tried very hard.."
+  2.
+  "Just for the fun"
+  "of doing useless things"
+
+# Ideas
 - wave fx along y axis - implementation can move words so should be fast
 
 Nice article about waiting on Atari ST:

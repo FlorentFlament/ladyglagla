@@ -3,7 +3,7 @@
 
         section VRAI_REglagla04_data,data
 VRAI_REglagla04_sequence:
-        dc.b 1,2,3,4,5,4,3,2,0,0 ; 16 bits alignment
+        dc.w 1,2,3,4,5,4,3,2,0
 VRAI_REglagla04_data:
         dc.l VRAI_REglagla04_0001_palette
         dc.l VRAI_REglagla04_0001_data

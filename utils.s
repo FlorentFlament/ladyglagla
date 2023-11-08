@@ -21,10 +21,12 @@ wait_hz_200:
 ;;; hz_200 is returned in d0
 ;;; Potentially scratches d0-d2/a0-a2
 get_hz_200:
+        movem.l a0-a2/d1-d2,-(sp)
 	pea     get_hz_200_sup
 	move.w  #38,-(sp)    ; Supexec function call
 	trap    #14          ; Call XBIOS
 	addq.l  #6,sp        ; Correct stack
+        movem.l (sp)+,a0-a2/d1-d2
         rts
 
 ;;; To be called by Supexec
