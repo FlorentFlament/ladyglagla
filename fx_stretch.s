@@ -3,6 +3,7 @@
         xdef fx_wave_animation
         xdef wait_next_vbl
         xdef get_current_image_address
+        xdef picdisplay_stretched_4colors
 
         xref get_hz_200
         xref set_palette
@@ -100,13 +101,13 @@ fx_picstretch_animation:
         move.w  #1,d4           ; d4/a4 sin stretch ratio
         move.w  #1000,a4
         lea     picstretch_table,a5
+        move.l  sp,a6           ; Address of animation structure
 
         ;; Animation Loop
         move.w  #0,d6           ; Use d6 to keep track of VBL
         move.w  #600,d7
 .loop:
         ;; Animation updated parameters
-        move.l  sp,a6
         jsr     get_current_image_address ; into a1
         ;; Compute image vertical stretching
         move.w  d7,d0
@@ -134,58 +135,25 @@ fx_picstretch_animation:
         movem.l (sp)+,a0-a6/d0-d7
         rts
 
-;;; a2 - target address for padded picture
-;;; a5 - animation address
-;;; Return values
-;;; a1 - contains padded picture address
-;;; Uses a2-a3,d2
-init_padded_picture_buffer:
-        movem.l a2-a3/d2,-(sp)
-
-        ;; set palette
-        move.l  (a5),a3
-        jsr     set_palette
-
-        macro padloop
-        move.w  #0,d2
-.padloop\@:                     ; appends a unique ID to the label
-        move.l  #0,(a2,d2)
-        addq.w  #4,d2
-        cmpi    #(28*80),d2
-        blt     .padloop\@
-        endm
-
-        ;; Copy padded image on the stack
-        padloop
-
-        add.w   #(28*80),a2
-        move.l  a2,a1           ; set return value
-        move.l  4(a5),a3        ; -> a3 image address
-        move.w  #0,d2
-.copy_loop:
-        move.l  (a3,d2),(a2,d2)
-        addq.w  #4,d2
-        cmp.w   #(200*80),d2
-        blt     .copy_loop
-
-        add.w   #(200*80),a2
-        padloop
-
-        movem.l (sp)+,a2-a3/d2
-        rts
-
 ;;; a4 - physical screen base address
 ;;; a5 - animation address
 fx_wave_animation:
         movem.l a0-a6/d0-d7,-(sp)
-        sub.l   #(256*80),sp    ; Allocating RAM for padded picture
+        sub.w   #14,sp           ; Allocate 3 longs and 1 word
+        ;;  0(sp) - long - address of images sequence table
+        ;;  4(sp) - long - address of images pointers
+        ;;  8(sp) - long - time of next animation image
+        ;; 12(sp) - word - index of current image in sequence table
 
-        move.l  sp,a2
-        jsr init_padded_picture_buffer
-        ;; a1 contains padded picture address
+        ;; Initialize animation structure
+        move.l  a6,0(sp)
+        move.l  a5,4(sp)
+        move.l  #0,8(sp)
+        move.w  #0,12(sp)
 
-        ;; using a5 to fetch data from picstretch_table
-        lea     picstretch_table,a5
+        ;; set palette
+        move.l  (a5),a3
+        jsr     set_palette
 
         ;; Animation initial parameters
         move.l  a4,a0                   ; physical screen address
@@ -196,11 +164,14 @@ fx_wave_animation:
         move.w  #1,a3
         ;move.w  #0,d4           ; d4/a4 sin stretch ratio (useless here)
         move.w  #100,a4
+        lea     picstretch_table,a5
+        move.l  sp,a6           ; address of animation structure
 
         ;; Animation Loop
         move.w  #600,d7
 .loop:
-        ;; Animation parameters
+        ;; Animation updated parameters
+        jsr     get_current_image_address ; into a1
         ;; sin offset
         add.w   #18,d2          ; offset must be even
         and.w   #$01ff,d2
@@ -216,7 +187,7 @@ fx_wave_animation:
         move.w  (a5,d0),d4      ; d4 is in [50; 200]
         dbra    d7,.loop
 
-        add.l   #(256*80),sp
+        add.w   #14,sp           ; Allocate 3 longs and 1 word
         movem.l (sp)+,a0-a6/d0-d7
         rts
 
@@ -234,21 +205,28 @@ picdisplay_stretched_4colors:
 
         ;; Some initialization
         lea.l   (200*160)(a0),a5        ; phy_end - End of screen physical mem
-        lea.l   (200*80)(a1),a6         ; pic_end - End of picture
         move.w  a3,d5                   ; pic_Z - pic ratio computation
         subq.w  #1,d5                   ; minus 1
         move.w  a4,d6                   ; sin_Z - sin ratio computation
         subq.w  #1,d6                   ; minus 1
-        ;; Compute pic_line_addr from pic_base_addr and pic_offset
-        add.w   d1,a1
 
 .picdisplay_loop:
         ;; a0 - phy_line_addr is the address of the current physical line
-        ;; a1 - pic_line_addr is the address of the current picture line
+        ;; d1 - pic_line_offset is the offset of the current picture line
         ;;      without wave offset
+        ;; d2 - wave_offset is the wave_offset in the wave_table
+        ;; d0 - is the sum mod 200
 
-        move.w  (a2,d2),d0      ; retrieving sin offset
-                                ; as word, already multiple of 80
+        move.w  (a2,d2),d0      ; can be negative
+        add.w   d1,d0
+        bpl     .offset_positive
+        add.w   #(200*80),d0
+.offset_positive:
+        cmp.w   #(200*80),d0
+        blt     .offset_mod200
+        sub.w   #(200*80),d0
+.offset_mod200:
+
         ;; Display a line
         REPT 20
         move.l  REPTN*4(a1,d0),REPTN*8(a0)
@@ -264,14 +242,14 @@ picdisplay_stretched_4colors:
         ;; As long as pic_Z <0 increase it by pic_Y and increase pic_line_addr
         bpl     .picz_positive
 .picz_negative:
-        add.w   #80,a1
+        add.w   #80,d1
         add.w   a3,d5
         bmi     .picz_negative
 .picz_positive:
-        cmp.l   a6,a1
-        blt     .mod_200
-        sub.w   #(200*80),a1
-.mod_200:
+        cmp.w   #(200*80),d1
+        blt     .picz_mod200
+        sub.w   #(200*80),d1
+.picz_mod200:
 
         ;; Compute next sintable offset (considering sin table stretch ratio)
         ;; Substract sin_X from sin_Z

@@ -158,7 +158,7 @@ main:
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
 ;        jsr     animation
-        jsr     fx_picstretch_animation
+        jsr     fx_wave_animation
         jsr     wait_next_pattern
 
         move.l  #2230,d6        ; duration of animation - (- (* 14 160) 10)
