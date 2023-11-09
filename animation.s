@@ -1,7 +1,5 @@
         xdef animation
-        xdef spinlock_hz200_3
 
-        xref wait_hz_200
         xref set_palette
         xref movepic_4colors
 
@@ -24,21 +22,22 @@ spinlock_hz200_3:
 ;;; a5 address of animation data
 ;;; a6 address of animation sequence
 ;;; d5 index in sequence table
+;;; Uses a3 and d6
 draw_pic:
         movem.l d6/a3,-(sp)
-        move.w  (a6,d5.w),d6    ; retrieve index in data table from sequence table
+        move.w  (a6,d5.w),d6    ; retrieve index in data table from seq table
 .seq_loop:
         asl.w   #2,d6           ; compute index in data table
-        move.l  (a5,d6.w),a3
+        move.l  (a5,d6),a3
         jsr     movepic_4colors
-        movem.l (sp)+,d6/a3
 
         ;; Update sequence index
-        addq.w  #1,d5
-        tst.b   (a6,d5.w)       ; check whether end of sequence table has been reached
+        addq.w  #2,d5
+        tst.w   (a6,d5)         ; check whether end of seq table is reached
         bne     .end
         move.w  #0,d5           ; loop in sequence table with 0 is read
 .end:
+        movem.l (sp)+,d6/a3
         rts
 
 ;;; Address of next character is in d3
@@ -91,9 +90,9 @@ animation:
 .main_loop:
         ;; Spin lock until one event is reached
         pea     spinlock_hz200_3
-	move.w  #38,-(sp)    ; Supexec function call
-	trap    #14          ; Call XBIOS
-	addq.l  #6,sp        ; Correct stack
+        move.w  #38,-(sp)    ; Supexec function call
+        trap    #14          ; Call XBIOS
+        addq.l  #6,sp        ; Correct stack
 
         ;; What to we do ?
         cmp.l   0(sp),d0        ; compare with t_next_chr

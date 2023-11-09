@@ -1,13 +1,14 @@
         xdef get_hz_200
         xdef wait_hz_200
         xdef wait_next_pattern
+        xdef spinlock_hz200_simple
 
 ;;; Wait loop: argument is 200th of second passed in d3
 ;;; register are saved and restored
 wait_hz_200:
         movem.l d0-d3/a0-a2,-(sp) ; Save registers
 
-	jsr     get_hz_200
+        jsr     get_hz_200
         add.l   d0,d3        ; Compute end time in d3
 .wait_loop:
         jsr     get_hz_200
@@ -22,10 +23,10 @@ wait_hz_200:
 ;;; Potentially scratches d0-d2/a0-a2
 get_hz_200:
         movem.l a0-a2/d1-d2,-(sp)
-	pea     get_hz_200_sup
-	move.w  #38,-(sp)    ; Supexec function call
-	trap    #14          ; Call XBIOS
-	addq.l  #6,sp        ; Correct stack
+        pea     get_hz_200_sup
+        move.w  #38,-(sp)    ; Supexec function call
+        trap    #14          ; Call XBIOS
+        addq.l  #6,sp        ; Correct stack
         movem.l (sp)+,a0-a2/d1-d2
         rts
 
@@ -47,4 +48,17 @@ wait_next_pattern:
         move.w  tempo_cnt,d0
         bne     .loop
         move.w  (sp)+,d0
+        rts
+
+;;; d3 - Target time to wait for (absolute in 200th of seconds)
+;;; Will spinlocks until time is reached
+spinlock_hz200_simple:
+        move.l  d0,-(sp)
+
+        .spin_loop:
+        move.l  $0004ba,d0      ; retrieve hz_200
+        cmp.l   d3,d0           ; compare with d1
+        blt     .spin_loop
+
+        move.l  (sp)+,d0
         rts

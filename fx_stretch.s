@@ -1,33 +1,33 @@
 ;;; Picture stretching effect
         xdef fx_picstretch_animation
         xdef fx_wave_animation
-        xdef wait_next_vbl
         xdef get_current_image_address
         xdef picdisplay_stretched_4colors
+        xdef wait_next_hz200
 
         xref get_hz_200
         xref set_palette
+        xref spinlock_hz200_simple
 
-;;; d6 contains last hz_200 value we waited for
-;;; wait for 4 hz_200
-;;; Ensures we don't update the picture twice in the same VBL
-;;; https://freemint.github.io/tos.hyp/en/bios_sysvars.html
-wait_next_vbl:
-        movem.l d0-d2/a0-a2,-(sp)
-        ;; TODO: Change picture to animate the thing
+        ;; Number of hz_200 units (200th of seconds) per frame
+        ;; 4 200th of seconds per frame for 50 FPS
+        ;; 5 for 40 FPS
+        ;; 6 for 33 FPS
+        ;; 8 for 25 FPS
+FX_HZ200_PERIOD=5
 
-        ;; Ensure we're not goind too fast
-        addq.l  #4,d6           ; Next hz_200 to wait for
-        jsr     get_hz_200
-        cmp.l   d6,d0
-        bge     .after_wait
-        move.w  #37,-(sp)    ; Vsync XBIOS function. Wait for next vertical sync
-        trap    #14          ; Call XBIOS
-        addq.l  #2,sp        ; Correct stack
-        jsr     get_hz_200
-.after_wait:
-        move.l  d0,d6           ; Update current hz_200
-        movem.l (sp)+,d0-d2/a0-a2
+;;; d6 contains next hz_200 value to wait for
+wait_next_hz200:
+        movem.l d0-d3/a0-a2,-(sp)
+
+        move.l  d6,d3
+        pea     spinlock_hz200_simple
+        move.w  #38,-(sp)       ; Supexec function call
+        trap    #14             ; Call XBIOS
+        addq.l  #6,sp           ; Correct stack
+
+        .after_wait:
+        movem.l (sp)+,d0-d3/a0-a2
         rts
 
 ;;; a6 contains the address of the following animation structure:
@@ -102,13 +102,14 @@ fx_picstretch_animation:
         move.w  #1000,a4
         lea     picstretch_table,a5
         move.l  sp,a6           ; Address of animation structure
+        jsr     get_hz_200
+        add.w   #FX_HZ200_PERIOD,d0
+        move.l  d0,d6          ; Stores successive hz_2000 in d6
 
         ;; Animation Loop
-        move.w  #0,d6           ; Use d6 to keep track of VBL
         move.w  #600,d7
 .loop:
         ;; Animation updated parameters
-        jsr     get_current_image_address ; into a1
         ;; Compute image vertical stretching
         move.w  d7,d0
         and.w   #$3f,d0         ; 64 items table
@@ -127,9 +128,13 @@ fx_picstretch_animation:
 
         ;; Display picture
         ;; Maybe we don't need to wait for next VBL in fact
-        jsr     wait_next_vbl   ; d6 contains last vbl
+        jsr     get_current_image_address ; into a1
         jsr     picdisplay_stretched_4colors
-        dbra    d7,.loop
+        jsr     wait_next_hz200 ; d6 contains next hz200 to wait for
+        add.w   #FX_HZ200_PERIOD,d6
+
+        subq.w  #1,d7
+        bpl     .loop
 
         add.w   #14,sp           ; Allocate 3 longs and 1 word
         movem.l (sp)+,a0-a6/d0-d7
@@ -166,18 +171,17 @@ fx_wave_animation:
         move.w  #100,a4
         lea     picstretch_table,a5
         move.l  sp,a6           ; address of animation structure
+        jsr     get_hz_200
+        add.w   #FX_HZ200_PERIOD,d0
+        move.w  d0,d6          ; Stores successive hz_2000 in d6
 
         ;; Animation Loop
         move.w  #600,d7
 .loop:
         ;; Animation updated parameters
-        jsr     get_current_image_address ; into a1
         ;; sin offset
         add.w   #18,d2          ; offset must be even
         and.w   #$01ff,d2
-
-        ;; Display picture
-        jsr     picdisplay_stretched_4colors
 
         ;; Compute wave stretching
         move.w  d7,d0
@@ -185,6 +189,12 @@ fx_wave_animation:
         and.w   #$3f,d0         ; 64 items table
         asl.w   #1,d0
         move.w  (a5,d0),d4      ; d4 is in [50; 200]
+
+        ;; Display picture
+        jsr     get_current_image_address ; into a1
+        jsr     picdisplay_stretched_4colors
+        jsr     wait_next_hz200   ; d6 contains next hz200 to wait for
+        add.w   #FX_HZ200_PERIOD,d6
         dbra    d7,.loop
 
         add.w   #14,sp           ; Allocate 3 longs and 1 word

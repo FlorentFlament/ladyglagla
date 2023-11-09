@@ -1,6 +1,5 @@
 # Todos
 
-- Animation pendant les deformations
 - Chemins plus sophisitiqués des déformations
 - Ecrans de transition
   1.
@@ -9,6 +8,7 @@
   2.
   "Just for the fun"
   "of doing useless things"
+- double buffering
 
 # Ideas
 - wave fx along y axis - implementation can move words so should be fast
