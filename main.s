@@ -175,7 +175,7 @@ main:
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
 ;        jsr     animation
-        jsr     fx_picstretch_animation
+        jsr     fx_wave_animation
         jsr     wait_next_pattern
 
         move.l  #$ffff0000,d4   ; 1
@@ -205,7 +205,7 @@ main:
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
 ;        jsr     animation
-        jsr     fx_picstretch_animation
+        jsr     fx_wave_animation
         jsr     wait_next_pattern
 
         move.l  #$0000ffff,d4   ; 2

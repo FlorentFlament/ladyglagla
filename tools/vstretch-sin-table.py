@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate a vertical stretch sinus table"""
 
-TABLE_LEN=64
+TABLE_LEN=256
 
 import math
 from asmlib import render
