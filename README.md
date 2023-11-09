@@ -1,6 +1,8 @@
 # Todos
 
 - Chemins plus sophisitiqués des déformations
+  . Déplacement sinusoidale supplémentaire
+  . Décrire des trajectoires pour certaines variables
 - Ecrans de transition
   1.
   "This demo was not done by ChatGPT"

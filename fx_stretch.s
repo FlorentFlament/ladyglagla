@@ -73,6 +73,7 @@ get_current_image_address:
 ;;; a5 - animation data (pictures' addresses) address
 ;;; a6 - animation sequence address
 fx_picstretch_animation:
+        ;; a5 - used as temporary address register for indirect accesses
         movem.l a0-a6/d0-d7,-(sp)
         sub.w   #14,sp           ; Allocate 3 longs and 1 word
         ;;  0(sp) - long - address of images sequence table
@@ -100,7 +101,6 @@ fx_picstretch_animation:
         move.w  #100,a3         ; d3/a3 pic stretch ratio
         move.w  #1,d4           ; d4/a4 sin stretch ratio
         move.w  #1000,a4
-        lea     picstretch_table,a5
         move.l  sp,a6           ; Address of animation structure
         jsr     get_hz_200
         add.w   #FX_HZ200_PERIOD,d0
@@ -111,28 +111,38 @@ fx_picstretch_animation:
 .loop:
         ;; Animation updated parameters
         ;; Compute image vertical stretching
+        lea     picstretch_table,a5
         move.w  d7,d0
         and.w   #$3f,d0         ; 64 items table
         asl.w   #1,d0
         move.w  (a5,d0),d3      ; d3 is in [50; 200]
-        ;; Compute offset in picture
-        move.w  #100,d1
+
+        ;; Retrieve offset for picture movement
+        lea     offset_table,a5
+        move.w  d7,d0
+        and.w   #$ff,d0         ; 64 items table
+        asl.w   #1,d0
+        move.w  (a5,d0),d1      ; d1 is in [-50; 50]
+        ;; Compensate offset to center stretch FX
+        add.w   #100,d1
         sub.w   d3,d1
-        bpl     .d1_positive
+
+        ;; Ensure offset is in picture
+        bpl     .offset_positive
         add.w   #200,d1         ; Add picture size
-.d1_positive:
+        .offset_positive:
         asl.w   #4,d1   ; *16
         move.w  d1,d0
         asl.w   #2,d1   ; *64
         add.w   d0,d1   ; *80
 
         ;; Display picture
-        ;; Maybe we don't need to wait for next VBL in fact
         jsr     get_current_image_address ; into a1
         jsr     picdisplay_stretched_4colors
         jsr     wait_next_hz200 ; d6 contains next hz200 to wait for
-        add.w   #FX_HZ200_PERIOD,d6
 
+        ;; Update loop variables then loop
+        add.w   #FX_HZ200_PERIOD,d6
         subq.w  #1,d7
         bpl     .loop
 
@@ -163,13 +173,12 @@ fx_wave_animation:
         ;; Animation initial parameters
         move.l  a4,a0                   ; physical screen address
         lea     wave_table,a2   ; sin table address
-        move.w  #0,d1           ; pic initial offset
+        ;move.w  #0,d1           ; pic initial offset - unused
         move.w  #0,d2           ; wave sin initial offset
         move.w  #1,d3           ; d3/a3 pic stretch ratio
         move.w  #1,a3
         ;move.w  #0,d4           ; d4/a4 sin stretch ratio (useless here)
         move.w  #100,a4
-        lea     picstretch_table,a5
         move.l  sp,a6           ; address of animation structure
         jsr     get_hz_200
         add.w   #FX_HZ200_PERIOD,d0
@@ -179,22 +188,41 @@ fx_wave_animation:
         move.w  #600,d7
 .loop:
         ;; Animation updated parameters
-        ;; sin offset
-        add.w   #18,d2          ; offset must be even
-        and.w   #$01ff,d2
 
         ;; Compute wave stretching
+        lea     picstretch_table,a5
         move.w  d7,d0
         lsr.w   #2,d0
         and.w   #$3f,d0         ; 64 items table
         asl.w   #1,d0
         move.w  (a5,d0),d4      ; d4 is in [50; 200]
 
+        ;; Retrieve offset for picture movement
+        lea     offset_table,a5
+        move.w  d7,d0
+        and.w   #$ff,d0         ; 64 items table
+        asl.w   #1,d0
+        move.w  (a5,d0),d1      ; d1 is in [-50; 50]
+
+        ;; Ensure offset is in picture
+        bpl     .offset_positive
+        add.w   #200,d1         ; Add picture size
+        .offset_positive:
+        asl.w   #4,d1   ; *16
+        move.w  d1,d0
+        asl.w   #2,d1   ; *64
+        add.w   d0,d1   ; *80
+
         ;; Display picture
         jsr     get_current_image_address ; into a1
         jsr     picdisplay_stretched_4colors
         jsr     wait_next_hz200   ; d6 contains next hz200 to wait for
+
+        ;; Update loop parameters then loop
         add.w   #FX_HZ200_PERIOD,d6
+        ;; Update sin offset
+        add.w   #18,d2          ; offset must be even
+        and.w   #$01ff,d2
         dbra    d7,.loop
 
         add.w   #14,sp           ; Allocate 3 longs and 1 word
@@ -326,3 +354,37 @@ picstretch_table:
         dc.w $0048, $0043, $003f, $003b, $0038, $0035, $0033, $0032
         dc.w $0032, $0032, $0033, $0035, $0038, $003b, $003f, $0043
         dc.w $0048, $004d, $0053, $005a, $0060, $0067, $006e, $0076
+
+offset_table:
+        dc.w $0000, $0001, $0002, $0004, $0005, $0006, $0007, $0009
+        dc.w $000a, $000b, $000c, $000d, $000f, $0010, $0011, $0012
+        dc.w $0013, $0014, $0015, $0016, $0018, $0019, $001a, $001b
+        dc.w $001c, $001d, $001e, $001f, $0020, $0021, $0022, $0022
+        dc.w $0023, $0024, $0025, $0026, $0027, $0027, $0028, $0029
+        dc.w $002a, $002a, $002b, $002c, $002c, $002d, $002d, $002e
+        dc.w $002e, $002f, $002f, $002f, $0030, $0030, $0031, $0031
+        dc.w $0031, $0031, $0031, $0032, $0032, $0032, $0032, $0032
+        dc.w $0032, $0032, $0032, $0032, $0032, $0032, $0031, $0031
+        dc.w $0031, $0031, $0031, $0030, $0030, $002f, $002f, $002f
+        dc.w $002e, $002e, $002d, $002d, $002c, $002c, $002b, $002a
+        dc.w $002a, $0029, $0028, $0027, $0027, $0026, $0025, $0024
+        dc.w $0023, $0022, $0022, $0021, $0020, $001f, $001e, $001d
+        dc.w $001c, $001b, $001a, $0019, $0018, $0016, $0015, $0014
+        dc.w $0013, $0012, $0011, $0010, $000f, $000d, $000c, $000b
+        dc.w $000a, $0009, $0007, $0006, $0005, $0004, $0002, $0001
+        dc.w $0000, $ffff, $fffe, $fffc, $fffb, $fffa, $fff9, $fff7
+        dc.w $fff6, $fff5, $fff4, $fff3, $fff1, $fff0, $ffef, $ffee
+        dc.w $ffed, $ffec, $ffeb, $ffea, $ffe8, $ffe7, $ffe6, $ffe5
+        dc.w $ffe4, $ffe3, $ffe2, $ffe1, $ffe0, $ffdf, $ffde, $ffde
+        dc.w $ffdd, $ffdc, $ffdb, $ffda, $ffd9, $ffd9, $ffd8, $ffd7
+        dc.w $ffd6, $ffd6, $ffd5, $ffd4, $ffd4, $ffd3, $ffd3, $ffd2
+        dc.w $ffd2, $ffd1, $ffd1, $ffd1, $ffd0, $ffd0, $ffcf, $ffcf
+        dc.w $ffcf, $ffcf, $ffcf, $ffce, $ffce, $ffce, $ffce, $ffce
+        dc.w $ffce, $ffce, $ffce, $ffce, $ffce, $ffce, $ffcf, $ffcf
+        dc.w $ffcf, $ffcf, $ffcf, $ffd0, $ffd0, $ffd1, $ffd1, $ffd1
+        dc.w $ffd2, $ffd2, $ffd3, $ffd3, $ffd4, $ffd4, $ffd5, $ffd6
+        dc.w $ffd6, $ffd7, $ffd8, $ffd9, $ffd9, $ffda, $ffdb, $ffdc
+        dc.w $ffdd, $ffde, $ffde, $ffdf, $ffe0, $ffe1, $ffe2, $ffe3
+        dc.w $ffe4, $ffe5, $ffe6, $ffe7, $ffe8, $ffea, $ffeb, $ffec
+        dc.w $ffed, $ffee, $ffef, $fff0, $fff1, $fff3, $fff4, $fff5
+        dc.w $fff6, $fff7, $fff9, $fffa, $fffb, $fffc, $fffe, $ffff
