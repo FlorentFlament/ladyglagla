@@ -113,16 +113,20 @@ fx_picstretch_animation:
         movem.l (sp)+,a0-a6/d0-d7
         rts
 
+;;; a3 - stretch_speed_seq address
 ;;; a4 - physical screen base address
 ;;; a5 - animation address
 ;;; a6 - animation sequence
 fx_wave_animation:
         movem.l a0-a6/d0-d7,-(sp)
+        lea.l   stretch_speed_table,a3
 
         ;; set palette
         ;; <TODO> Do somewhere else ?
+        move.l  a3,-(sp)
         move.l  (a5),a3
         jsr     set_palette
+        move.l  (sp)+,a3
 
         ;; Allocate 4 longs for animation structure
         sub.w   #16,sp
@@ -130,8 +134,8 @@ fx_wave_animation:
         ;; Allocate 9 longs for picture structure
         sub.w   #36,sp          ; sp
         move.l  sp,a1           ; a5 points to the picture structure
-        ;; Allocate 7 longs for fx structure
-        sub.w   #28,sp          ; sp
+        ;; Allocate 11 longs for fx structure
+        sub.w   #44,sp          ; sp
         move.l  sp,a2           ; a5 points to the fx structure
 
         ;; Initialize animation structure
@@ -155,23 +159,35 @@ fx_wave_animation:
 
         ;; Initialize fx structure
         move.l  #18,0(a2)       ; wave_offset_speed
-        move.l  #2,4(a2)        ; wave_ratio_speed
-        move.l  #4,8(a2)        ; stretch_ratio_speed
+        move.l  #1,4(a2)        ; wave_X - wave_ratio_speed
+        move.l  #1000,36(a2)    ; wave_Y
+        move.l  #0,8(a2)       ; stretch_X - stretch_ratio_speed
+        move.l  #100,40(a2)     ; stretch_Y
         move.l  #0,12(a2)       ; stretch_index
         jsr     get_hz_200
         add.w   #FX_HZ200_PERIOD,d0
         move.l  d0,16(a2)       ; next_frame_hz200
-        move.l  a0,20(a2)       ; address of animation structure
-        move.l  a1,24(a2)       ; address of picture structure
+        move.l  #0,20(a2)       ; wave_Z
+        move.l  #0,24(a2)       ; stretch_Z
+        move.l  a0,28(a2)       ; address of animation structure
+        move.l  a1,32(a2)       ; address of picture structure
 
         ;; Animation Loop
         move.l  a2,a6
-        move.w  #400,d7         ; 40 fps - 10 seconds
-.loop:
-        jsr     fx_next_frame   ; with fx structure in a6
-        dbra    d7,.loop
+        move.w  #0,d7
 
-        add.w   #(16+36+28),sp           ; Allocate 3 longs and 1 word
+        .loop:
+        move.w  d7,d6           ; for stretch speed lookup
+        lsr.w   #3,d6           ; /8
+        asl.w   #1,d6
+        move.w  (a3,d6),10(a2)  ; addressing word in 8(a2)
+        jsr     fx_next_frame   ; with fx structure in a6
+
+        addq.w  #1,d7
+        cmp.w   #1022,d7         ; 40 fps - 512 - 16 beats = 12.8 secs
+        blt     .loop
+
+        add.w   #(16+36+44),sp           ; Allocate 3 longs and 1 word
         movem.l (sp)+,a0-a6/d0-d7
         rts
 
@@ -180,15 +196,19 @@ fx_wave_animation:
 ;;; To be extracted with: `movem.l (a6),d1-d4/a0-a1`
 ;;; Parameters - 24 bytes (4*6) in total
 ;;;  0(a6) - d1 - wave_offset_speed - Speed at which wave offset needs increment
-;;;  4(a6) - d2 - wave_ratio_speed - Speed at which the wave ratio changes
-;;;  8(a6) - d3 - stretch_ratio_speed - Speed at which the image stretch changes
+;;;  4(a6) - d2 - wave_X - d2/a2 wave_ratio_speed
+;;; 36(a6) - a2 - wave_Y - Speed at which the wave ratio changes
+;;;  8(a6) - d3 - stretch_X - d3/a3 stretch_ratio_speed
+;;; 40(a6) - a3 - stretch_Y - Speed at which image stretching changes
 ;;; 12(a6) - d4 - stretch_index - Index in the image stretch table
 ;;; 16(a6) - d5 - next_frame_hz200 - hz200 time for next frame
-;;; 20(a6) - a0 - address of animation structure
-;;; 24(a6) - a1 - address of picture structure
+;;; 20(a6) - d6 - wave_Z
+;;; 24(a6) - d7 - stretch_Z
+;;; 28(a6) - a0 - address of animation structure
+;;; 32(a6) - a1 - address of picture structure
 fx_next_frame
         movem.l d0-d7/a0-a6,-(sp)
-        movem.l (a6),d1-d5/a0-a1
+        movem.l (a6),d1-d7/a0-a3
 
         ;; Compute wave stretching ratio
         lea     picstretch_table,a2
@@ -226,8 +246,20 @@ fx_next_frame
         jsr     wait_next_hz200   ; d6 contains next hz200 to wait for
 
         ;; Update loop parameters
-        add.w   d3,d4           ; index to a word table
-        and.w   #$1ff,d4         ; 256 items but left-shifted
+
+        ;; Compute next stretch index
+        ;; Substract stretch_X from stretch_Z
+        sub.w   d3,d7
+        ;; As long as stretch_Z<0 increase by stretch_Y
+        ;;   Also increase stretch index
+        bpl     .stretchz_positive
+.sinz_negative:
+        add.w   #2,d4           ; increase by a word
+        add.w   a3,d7
+        bmi     .sinz_negative
+.stretchz_positive:
+        and.w   #$01ff,d4       ; 256 items but left-shifted
+
         move.l  d4,12(a6)
         add.l   #FX_HZ200_PERIOD,d5
         move.l  d5,16(a6)
@@ -461,3 +493,21 @@ offset_table:
         dc.w $ffe4, $ffe5, $ffe6, $ffe7, $ffe8, $ffea, $ffeb, $ffec
         dc.w $ffed, $ffee, $ffef, $fff0, $fff1, $fff3, $fff4, $fff5
         dc.w $fff6, $fff7, $fff9, $fffa, $fffb, $fffc, $fffe, $ffff
+
+stretch_speed_table:
+        dc.w $0032, $003c, $0046, $0050, $005a, $0064, $006e, $0078
+        dc.w $0082, $008c, $0096, $00a0, $00aa, $00b4, $00be, $00c8
+        dc.w $00d2, $00dc, $00e6, $00f0, $00fa, $0104, $010e, $0118
+        dc.w $0122, $012c, $0136, $0140, $014a, $0154, $015e, $0168
+        dc.w $0172, $017c, $0186, $0190, $019a, $01a4, $01ae, $01b8
+        dc.w $01c2, $01cc, $01d6, $01e0, $01ea, $01f4, $01fe, $0208
+        dc.w $0212, $021c, $0226, $0230, $023a, $0244, $024e, $0258
+        dc.w $0262, $026c, $0276, $0280, $028a, $0294, $029e, $02a8
+        dc.w $02b2, $02bc, $02c6, $02d0, $02da, $02e4, $02ee, $02f8
+        dc.w $0302, $030c, $0316, $0320, $0316, $030c, $0302, $02f8
+        dc.w $02ee, $02e4, $02da, $02d0, $02c6, $02bc, $02b2, $02a8
+        dc.w $029e, $0294, $028a, $0280, $0276, $026c, $0262, $0258
+        dc.w $024e, $0244, $023a, $0230, $0226, $021c, $0212, $0208
+        dc.w $01fe, $01f4, $01ea, $01e0, $01d6, $01cc, $01c2, $01b8
+        dc.w $01ae, $01a4, $019a, $0190, $0190, $0190, $0190, $0190
+        dc.w $0190, $0190, $0190, $0190, $0190, $0190, $0190, $0190
