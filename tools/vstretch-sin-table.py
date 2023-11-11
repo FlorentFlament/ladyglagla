@@ -8,7 +8,7 @@ from asmlib import render
 
 
 def sin_func(x):
-    return 75*math.sin(2*math.pi/TABLE_LEN * x) + 125
+    return 75*math.sin(2*math.pi/TABLE_LEN * x - 0.3398) + 125
 
 def sin_table():
     return [round(sin_func(x)) for x in range(TABLE_LEN)]
