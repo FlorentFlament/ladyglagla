@@ -38,10 +38,10 @@ fx_wave_animation:
         ;; Initialize animation structure
         jsr     get_hz_200
         add.w   #ANIMATION_HZ200_PERIOD,d0
-        move.l  a6,0(a1)
-        move.l  a5,4(a1)
-        move.l  d0,8(a1)
-        move.l  #0,12(a1)
+        move.l  d0,0(a1)
+        move.l  #0,4(a1)
+        move.l  a6,8(a1)
+        move.l  a5,12(a1)
         ;; Store animation structrure address into fx structure
         move.l  a1,(a0)
 
@@ -233,43 +233,42 @@ get_next_stretch_X:
         movem.l (sp)+,d1-d7/a0-a6
         rts
 
+;;; Parameters
 ;;; a6 contains the address of the following animation structure:
-;;;  0(a6) - long - address of images sequence table
-;;;  4(a6) - long - address of images pointers
-;;;  8(a6) - long - time of next animation image
-;;; 12(a6) - long - index of current image in sequence table
-;;;
+;;;  0(a6) - long - time of next animation image
+;;;  4(a6) - long - index of current image in sequence table
+;;;  8(a6) - long - address of images sequence table
+;;; 12(a6) - long - address of images pointers
+;;; Return value:
 ;;; a1 - returns the current image address in a1
+;;; Notes:
 ;;; Index in sequence table and time of next animation are updated
 get_current_image_address:
-        movem.l a0/d0-d3,-(sp)
-        move.l  0(a6),a0        ; sequence table address
-        move.l  4(a6),a1        ; images pointers table addess
-        move.l  8(a6),d2        ; time of next animation image
-        move.l  12(a6),d3       ; index in sequence table
+        movem.l d0-d3/a0,-(sp)
+        movem.l (a6),d2-d3/a0-a1
 
         ;; Is it time for new animation image ?
         jsr     get_hz_200      ; into d0
         cmp.l   d2,d0
         blt     .image_uptodate
         ;; time of next image has been reached
-        add.w   #ANIMATION_HZ200_PERIOD,d2          ; time of next change
-        move.l  d2,8(a6)
+        add.l   #ANIMATION_HZ200_PERIOD,d2          ; time of next change
 
         addq.w  #2,d3           ; increase sequence index - sequence of words
         move.w  (a0,d3),d1      ; fetch image index
-        bne     .store_sequence_index ;
+        bne     .store_values ;
         ;; if image index is 0 restart sequence from 0
         move.w  #0,d3
-.store_sequence_index:
-        move.l  d3,12(a6)       ; save current index in sequence table
 
-.image_uptodate:
+        .store_values:
+        movem.l d2-d3,(a6)
+
+        .image_uptodate:
         move.w  (a0,d3),d1      ; fetch image index from sequence table
         asl.w   #2,d1           ; Convert to address index
         move.l  (a1,d1),a1      ; fetch image address to a1
 
-        movem.l (sp)+,a0/d0-d3
+        movem.l (sp)+,d0-d3/a0
         rts
 
 ;;; picture_struct
