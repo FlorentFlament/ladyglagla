@@ -281,9 +281,9 @@ get_current_image_address:
 ;;; 24(a6) - a2 - wave_base_addr base address of wave table
 ;;;  0(a6) - d1 - pic_offset initial offset in picture - multiple of 80
 ;;;  4(a6) - d2 - wave_offset initial offset in wave table - multiple of 2
-;;;  8(a6) - d3 - d3/a3 pic_X/pic_Y picture stretch ratio
+;;;  8(a6) - d3 - d3/a3 pic_X/pic_Y picture ratio (stretching)
 ;;; 28(a6) - a3
-;;; 12(a6) - d4 - d4/a4 sin_X/sin_Y sinus table stretch ratio
+;;; 12(a6) - d4 - d4/a4 sin_X/sin_Y wave ratio
 ;;; 32(a6) - a4
 picdisplay_stretched_4colors:
         movem.l a0-a6/d0-d7,-(sp)       ; save registers in stack
