@@ -5,6 +5,7 @@
         xdef picdisplay_stretched_4colors
         xdef wait_next_hz200
         xdef fx_next_frame
+        xdef fx_loop
 
         xref get_hz_200
         xref set_palette
@@ -17,6 +18,125 @@
         ;; 8 for 25 FPS
 FX_HZ200_PERIOD=5
 ANIMATION_HZ200_PERIOD=25       ; 1 image every 25 hz200 i.e 8 FPS
+
+;;; Parameters:
+;;; a4 - physical screen base address
+;;; a5 - animation address
+;;; a6 - animation sequence
+fx_wave_animation:
+        movem.l a0-a6/d0-d7,-(sp)
+        ;; Initialize fx structures before calling main fx loop
+
+        ;; Allocate 5 longs for fx structure
+        ;; It encapsulates very other structure
+        sub.w   #20,sp          ; sp
+        move.l  sp,a0           ; a0 points to the fx structure
+
+        ;; Allocate 4 longs for animation structure
+        sub.w   #16,sp
+        move.l  sp,a1           ; a1 points to the animation structure
+        ;; Initialize animation structure
+        jsr     get_hz_200
+        add.w   #ANIMATION_HZ200_PERIOD,d0
+        move.l  a6,0(a1)
+        move.l  a5,4(a1)
+        move.l  d0,8(a1)
+        move.l  #0,12(a1)
+        ;; Store animation structrure address into fx structure
+        move.l  a1,(a0)
+
+        ;; Allocate 9 longs for picture structure
+        sub.w   #36,sp
+        move.l  sp,a1           ; a1 points to the picture structure
+        ;; Initialize picture structure
+        move.l  a4,16(a1)               ; physical screen address
+        move.l  #0,20(a1)               ; address of picture to display
+        move.l  #wave_table,24(a1)      ; wave table address
+        move.l  #0,0(a1)                ; pic initial offset
+        move.l  #0,4(a1)                ; wave initial offset
+        move.l  #100,8(a1)              ; d3/a3 pic stretch ratio
+        move.l  #100,28(a1)
+        move.l  #1,12(a1)               ; d4/a4 sin stretch ratio
+        move.l  #1000,32(a1)
+        ;; Store structrure address into fx structure
+        move.l  a1,4(a0)
+
+        ;; Allocate 4 words for fx_stretch structure
+        sub.w   #8,sp
+        move.l  sp,a1           ; a2 points to the fx_stretch structure
+        ;; Initialize fx_stretch structure
+        move.w  #0,0(a1)       ; stretch_X - stretch_ratio_speed (X/Y)
+        move.w  #100,2(a1)     ; stretch_Y
+        move.w  #0,4(a1)       ; stretch_Z
+        move.w  #0,6(a1)       ; stretch_index
+        ;; Store structrure address into fx structure
+        move.l  a1,8(a0)
+
+        ;; Allocate 4 words for fx_offset structure
+        sub.w   #8,sp
+        move.l  sp,a1           ; a3 points to the fx_offset structure
+        ;; Initialize fx_offset structure
+        move.w  #0,0(a1)       ; offset_X - offset_ratio_speed (X/Y)
+        move.w  #0,2(a1)       ; offset_Y
+        move.w  #0,4(a1)       ; offset_Z
+        move.w  #0,6(a1)       ; offset_index
+        ;; Store structrure address into fx structure
+        move.l  a1,12(a0)
+
+        ;; Allocate 4 words for fx_wave structure
+        sub.w   #8,sp
+        move.l  sp,a1           ; a4 points to the fx_wave structure
+        ;; Initialize fx_wave structure
+        move.w  #1,0(a1)       ; wave_X - wave_ratio_speed (X/Y)
+        move.w  #1000,2(a1)    ; wave_Y
+        move.w  #0,4(a1)       ; wave_Z
+        move.w  #0,6(a1)       ; wave_index
+        ;; Store structrure address into fx structure
+        move.l  a1,16(a0)
+
+        ;; set palette
+        move.l  (a5),a3
+        jsr     set_palette
+
+        ;; Move to main fx_loop
+        move.l  a0,a6
+        jsr fx_loop             ; with fx structure in a6
+
+        add.w   #(20+16+36+8+8+8),sp           ; Allocate 3 longs and 1 word
+        movem.l (sp)+,a0-a6/d0-d7
+        rts
+
+;;; Parameters
+;;; a6 - fx structure
+fx_loop:
+        movem.l a0-a6/d0-d7,-(sp)
+
+        ;; Animation Loop
+        lea.l   stretch_speed_table,a0 ; for stretch speed trajectory
+        move.l  8(a6),a1               ; fx_stretch structure in a1
+
+        jsr     get_hz_200      ; into d0
+        move.l  d0,d6           ; hz_200 is in d6
+        add.l   #FX_HZ200_PERIOD,d6
+        move.w  #0,d7           ; frame counter is in d7
+
+        .loop:
+        move.w  d7,d0           ; for stretch speed lookup
+        lsr.w   #3,d0           ; /8
+        asl.w   #1,d0
+        move.w  (a0,d0),(a1)    ; update stretch X
+        jsr     fx_next_frame   ; with fx structure in a6
+
+        ;; Update loop parameters
+        jsr     wait_next_hz200   ; d6 contains next hz200 to wait for
+        add.l   #FX_HZ200_PERIOD,d6
+
+        addq.w  #1,d7
+        cmp.w   #1022,d7         ; 40 fps - 512 - 16 beats = 12.8 secs
+        blt     .loop
+
+        movem.l (sp)+,a0-a6/d0-d7
+        rts
 
 ;;; d6 contains next hz_200 value to wait for
 wait_next_hz200:
@@ -32,64 +152,30 @@ wait_next_hz200:
         movem.l (sp)+,d0-d3/a0-a2
         rts
 
-;;; a4 - physical screen base address
-;;; a5 - animation data (pictures' addresses) address
-;;; a6 - animation sequence address
-fx_picstretch_animation:
-        ;; a5 - used as temporary address register for indirect accesses
-        movem.l a0-a6/d0-d7,-(sp)
-        sub.w   #14,sp           ; Allocate 3 longs and 1 word
-        ;;  0(sp) - long - address of images sequence table
-        ;;  4(sp) - long - address of images pointers
-        ;;  8(sp) - long - time of next animation image
-        ;; 12(sp) - word - index of current image in sequence table
+;;; Requires an FX structure in a6
+;;; 20 bytes long (5*4)
+;;; To be extracted with: `movem.l (a6),a0-a4`
+;;;  0(a6) - a0 - address of animation structure
+;;;  4(a6) - a1 - address of picture structure
+;;;  8(a6) - a2 - address of fx_stretch structure
+;;; 12(a6) - a3 - address of fx_offset structure
+;;; 16(a6) - a4 - address of fx_wave structure
+fx_next_frame
+        movem.l d0-d7/a0-a6,-(sp)
+        movem.l (a6),a0-a4
 
-        ;; Initialize animation structure
-        move.l  a6,0(sp)
-        move.l  a5,4(sp)
-        move.l  #0,8(sp)
-        move.w  #0,12(sp)
+        ;; Compute stretching ratio
+        move.l  a6,-(sp)
+        move.l  a2,a6
+        jsr     get_next_stretch_X ; into d0
+        move.l  (sp)+,a6
 
-        ;; set palette
-        move.l  (a5),a3
-        jsr     set_palette
+        ;; d0 contains new stretch_X value
+        move.l  d0,8(a1)           ; stretch_X into picture struct
 
-        ;; Animation initial parameters
-        move.l  a4,a0           ; physical screen address
-        ;; a1 - image data is computed in the display loop
-        lea     wave_table,a2   ; sin table address
-        ;; d1 -  pic initial offset - is computed in the display loop
-        move.w  #0,d2           ; wave sin initial offset
-        ;; d3 is computed in the picture display loop
-        move.w  #100,a3         ; d3/a3 pic stretch ratio
-        move.w  #1,d4           ; d4/a4 sin stretch ratio
-        move.w  #1000,a4
-        move.l  sp,a6           ; Address of animation structure
-        jsr     get_hz_200
-        add.w   #FX_HZ200_PERIOD,d0
-        move.l  d0,d6          ; Stores successive hz_2000 in d6
-
-        ;; Animation Loop
-        move.w  #600,d7
-.loop:
-        ;; Animation updated parameters
-        ;; Compute image vertical stretching
-        lea     picstretch_table,a5
-        move.w  d7,d0
-        and.w   #$3f,d0         ; 64 items table
-        asl.w   #1,d0
-        move.w  (a5,d0),d3      ; d3 is in [50; 200]
-
-        ;; Retrieve offset for picture movement
-        lea     offset_table,a5
-        move.w  d7,d0
-        and.w   #$ff,d0         ; 64 items table
-        asl.w   #1,d0
-        move.w  (a5,d0),d1      ; d1 is in [-50; 50]
-        ;; Compensate offset to center stretch FX
-        add.w   #100,d1
-        sub.w   d3,d1
-
+        ;; Compute picture offset to compensate stretching ratio
+        move.w  #100,d1
+        sub.w   d0,d1
         ;; Ensure offset is in picture
         bpl     .offset_positive
         add.w   #200,d1         ; Add picture size
@@ -99,134 +185,7 @@ fx_picstretch_animation:
         asl.w   #2,d1   ; *64
         add.w   d0,d1   ; *80
 
-        ;; Display picture
-        jsr     get_current_image_address ; into a1
-        jsr     picdisplay_stretched_4colors
-        jsr     wait_next_hz200 ; d6 contains next hz200 to wait for
-
-        ;; Update loop variables then loop
-        add.w   #FX_HZ200_PERIOD,d6
-        subq.w  #1,d7
-        bpl     .loop
-
-        add.w   #14,sp           ; Allocate 3 longs and 1 word
-        movem.l (sp)+,a0-a6/d0-d7
-        rts
-
-;;; a3 - stretch_speed_seq address
-;;; a4 - physical screen base address
-;;; a5 - animation address
-;;; a6 - animation sequence
-fx_wave_animation:
-        movem.l a0-a6/d0-d7,-(sp)
-        lea.l   stretch_speed_table,a3
-
-        ;; set palette
-        ;; <TODO> Do somewhere else ?
-        move.l  a3,-(sp)
-        move.l  (a5),a3
-        jsr     set_palette
-        move.l  (sp)+,a3
-
-        ;; Allocate 4 longs for animation structure
-        sub.w   #16,sp
-        move.l  sp,a0           ; a6 points to the animation structure
-        ;; Allocate 9 longs for picture structure
-        sub.w   #36,sp          ; sp
-        move.l  sp,a1           ; a5 points to the picture structure
-        ;; Allocate 11 longs for fx structure
-        sub.w   #44,sp          ; sp
-        move.l  sp,a2           ; a5 points to the fx structure
-
-        ;; Initialize animation structure
-        move.l  a6,0(a0)
-        move.l  a5,4(a0)
-        jsr     get_hz_200
-        add.w   #ANIMATION_HZ200_PERIOD,d0
-        move.l  d0,8(a0)
-        move.l  #0,12(a0)
-
-        ;; Initialize picture structure
-        move.l  a4,16(a1)               ; physical screen address
-        move.l  #0,20(a1)               ; address of picture to display (dummy)
-        move.l  #wave_table,24(a1)      ; wave sin table address
-        move.l  #0,0(a1)                ; pic initial offset
-        move.l  #0,2(a1)                ; wave sin initial offset
-        move.l  #100,8(a1)              ; d3/a3 pic stretch ratio
-        move.l  #100,28(a1)
-        move.l  #1,12(a1)             ; d4/a4 sin stretch ratio (useless here)
-        move.l  #1000,32(a1)
-
-        ;; Initialize fx structure
-        move.l  #18,0(a2)       ; wave_offset_speed
-        move.l  #1,4(a2)        ; wave_X - wave_ratio_speed
-        move.l  #1000,36(a2)    ; wave_Y
-        move.l  #0,8(a2)       ; stretch_X - stretch_ratio_speed
-        move.l  #100,40(a2)     ; stretch_Y
-        move.l  #0,12(a2)       ; stretch_index
-        jsr     get_hz_200
-        add.w   #FX_HZ200_PERIOD,d0
-        move.l  d0,16(a2)       ; next_frame_hz200
-        move.l  #0,20(a2)       ; wave_Z
-        move.l  #0,24(a2)       ; stretch_Z
-        move.l  a0,28(a2)       ; address of animation structure
-        move.l  a1,32(a2)       ; address of picture structure
-
-        ;; Animation Loop
-        move.l  a2,a6
-        move.w  #0,d7
-
-        .loop:
-        move.w  d7,d6           ; for stretch speed lookup
-        lsr.w   #3,d6           ; /8
-        asl.w   #1,d6
-        move.w  (a3,d6),10(a2)  ; addressing word in 8(a2)
-        jsr     fx_next_frame   ; with fx structure in a6
-
-        addq.w  #1,d7
-        cmp.w   #1022,d7         ; 40 fps - 512 - 16 beats = 12.8 secs
-        blt     .loop
-
-        add.w   #(16+36+44),sp           ; Allocate 3 longs and 1 word
-        movem.l (sp)+,a0-a6/d0-d7
-        rts
-
-;;; Requires an FX structure in a6
-;;; 28 bytes long
-;;; To be extracted with: `movem.l (a6),d1-d4/a0-a1`
-;;; Parameters - 24 bytes (4*6) in total
-;;;  0(a6) - d1 - wave_offset_speed - Speed at which wave offset needs increment
-;;;  4(a6) - d2 - wave_X - d2/a2 wave_ratio_speed
-;;; 36(a6) - a2 - wave_Y - Speed at which the wave ratio changes
-;;;  8(a6) - d3 - stretch_X - d3/a3 stretch_ratio_speed
-;;; 40(a6) - a3 - stretch_Y - Speed at which image stretching changes
-;;; 12(a6) - d4 - stretch_index - Index in the image stretch table
-;;; 16(a6) - d5 - next_frame_hz200 - hz200 time for next frame
-;;; 20(a6) - d6 - wave_Z
-;;; 24(a6) - d7 - stretch_Z
-;;; 28(a6) - a0 - address of animation structure
-;;; 32(a6) - a1 - address of picture structure
-fx_next_frame
-        movem.l d0-d7/a0-a6,-(sp)
-        movem.l (a6),d1-d7/a0-a3
-
-        ;; Compute wave stretching ratio
-        lea     picstretch_table,a2
-        move.w  (a2,d4),d0      ; d0 is in [50; 200]
-        move.l  d0,8(a1)
-
-        ;; Compute picture offset to compensate stretching ratio
-        move.w  #100,d6
-        sub.w   d0,d6
-        ;; Ensure offset is in picture
-        bpl     .offset_positive
-        add.w   #200,d6         ; Add picture size
-        .offset_positive:
-        asl.w   #4,d6   ; *16
-        move.w  d6,d0
-        asl.w   #2,d6   ; *64
-        add.w   d0,d6   ; *80
-        move.l  d6,0(a1)
+        move.l  d1,0(a1)        ; picture offset into picture struct
 
         ;; Retrieve address of picture to display
         movem.l a1/a5/a6,-(sp)
@@ -242,29 +201,45 @@ fx_next_frame
         jsr     picdisplay_stretched_4colors
         move.l  (sp)+,a6
 
-        move.l  d5,d6
-        jsr     wait_next_hz200   ; d6 contains next hz200 to wait for
+        movem.l (sp)+,d0-d7/a0-a6
+        rts
 
-        ;; Update loop parameters
+;;; Requires:
+;;; a6 - an fx_stretch structure
+;;; Returns:
+;;; d0 - pic_X picture stretch ratio (not to be confused with stretch_X)
+;;; Note: stretch_X is not updated there
+;;; fx_stretch structure:
+;;; 0(a6) - d1 - stretch_X
+;;; 2(a6) - d2 - stretch_Y
+;;; 4(a6) - d3 - stretch_Z
+;;; 6(a6) - d4 - stretch_index
+get_next_stretch_X:
+        movem.l d1-d7/a0-a6,-(sp)
+        movem.w (a6),d1-d4
 
         ;; Compute next stretch index
         ;; Substract stretch_X from stretch_Z
-        sub.w   d3,d7
-        ;; As long as stretch_Z<0 increase by stretch_Y
+        sub.w   d1,d3
+        ;; As long as stretch_Z<0 increase it by stretch_Y
         ;;   Also increase stretch index
         bpl     .stretchz_positive
 .sinz_negative:
         add.w   #2,d4           ; increase by a word
-        add.w   a3,d7
+        add.w   d2,d3
         bmi     .sinz_negative
 .stretchz_positive:
         and.w   #$01ff,d4       ; 256 items but left-shifted
 
-        move.l  d4,12(a6)
-        add.l   #FX_HZ200_PERIOD,d5
-        move.l  d5,16(a6)
+        ;; Update stretch_z and stretch_index into fx_stretch structure
+        move.w  d3,4(a6)
+        move.w  d4,6(a6)
 
-        movem.l (sp)+,d0-d7/a0-a6
+        ;; return pic_X value in d0
+        lea     picstretch_table,a0
+        move.w  (a0,d4),d0      ; d0 is in [50; 200]
+
+        movem.l (sp)+,d1-d7/a0-a6
         rts
 
 ;;; a6 contains the address of the following animation structure:
@@ -313,9 +288,9 @@ get_current_image_address:
 ;;; Parameters - 36 bytes (4*9) in total
 ;;; 16(a6) - a0 - phy_base_addr base address of screen physical memory
 ;;; 20(a6) - a1 - pic_base_addr base address of picture to display
-;;; 24(a6) - a2 - sin_base_addr base address of sinus table
+;;; 24(a6) - a2 - wave_base_addr base address of wave table
 ;;;  0(a6) - d1 - pic_offset initial offset in picture - multiple of 80
-;;;  4(a6) - d2 - sin_offset initial offset in sinus table - multiple of 2
+;;;  4(a6) - d2 - wave_offset initial offset in wave table - multiple of 2
 ;;;  8(a6) - d3 - d3/a3 pic_X/pic_Y picture stretch ratio
 ;;; 28(a6) - a3
 ;;; 12(a6) - d4 - d4/a4 sin_X/sin_Y sinus table stretch ratio
@@ -350,7 +325,7 @@ picdisplay_stretched_4colors:
 
         ;; Display a line
         REPT 20
-        move.l  REPTN*4(a1,d0),REPTN*8(a0)
+        move.l  REPTN*4(a1,d0),REPTN*8(a0) ; <-
         ENDR
 
         ;; *** Prepare next picture line *** ;;
