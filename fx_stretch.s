@@ -6,6 +6,7 @@
         xdef wait_next_hz200
         xdef fx_next_frame
         xdef fx_loop
+        xdef process_controller
 
         xref get_hz_200
         xref set_palette
@@ -29,7 +30,7 @@ fx_wave_animation:
 
         ;; Allocate 5 longs for fx structure
         ;; It encapsulates very other structure
-        sub.w   #20,sp          ; sp
+        sub.w   #24,sp          ; sp
         move.l  sp,a0           ; a0 points to the fx structure
 
         ;; Allocate 4 longs for animation structure
@@ -52,14 +53,30 @@ fx_wave_animation:
         move.l  a4,16(a1)               ; physical screen address
         move.l  #0,20(a1)               ; address of picture to display
         move.l  #wave_table,24(a1)      ; wave table address
-        move.l  #0,0(a1)                ; pic initial offset
-        move.l  #0,4(a1)                ; wave initial offset
-        move.l  #100,8(a1)              ; d3/a3 pic stretch ratio
+        move.l  #0,0(a1)                ; pic_offset
+        move.l  #0,4(a1)                ; wave_offset
+        move.l  #100,8(a1)              ; d3/a3 pic_ratio
         move.l  #100,28(a1)
-        move.l  #1,12(a1)               ; d4/a4 sin stretch ratio
+        move.l  #1,12(a1)               ; d4/a4 wave_ration
         move.l  #1000,32(a1)
         ;; Store structrure address into fx structure
         move.l  a1,4(a0)
+
+        ;; Allocate pic_offset controller - (7*2+2*4)=22 bytes
+        sub.w   #22,sp
+        move.l  sp,a2           ; a1 points to the animation structure
+        ;; Initialize pic_offset controller
+        move.w  #1,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #80,2(a2)       ; Linear step / 2 when word Table
+        move.w  #0,4(a2)        ; Current value / Table index
+        move.w  #(80*200),6(a2) ; linear/table_index modulus
+        move.w  #100,8(a2)      ; X - of X/Y speed factor
+        move.w  #100,10(a2)     ; Y - of X/Y speed factor
+        move.w  #0,12(a2)       ; Z - of speed factor
+        move.l  a1,14(a2)       ; Address of parameter to control
+        move.l  #0,18(a2)       ; Table address (if any)
+        ;; Store structrure address into fx structure
+        move.l  a2,20(a0)
 
         ;; Allocate 4 words for fx_stretch structure
         sub.w   #8,sp
@@ -102,7 +119,7 @@ fx_wave_animation:
         move.l  a0,a6
         jsr fx_loop             ; with fx structure in a6
 
-        add.w   #(20+16+36+8+8+8),sp           ; Allocate 3 longs and 1 word
+        add.w   #(24+16+36+22+8+8+8),sp           ; Allocate 3 longs and 1 word
         movem.l (sp)+,a0-a6/d0-d7
         rts
 
@@ -153,17 +170,21 @@ wait_next_hz200:
         rts
 
 ;;; Requires an FX structure in a6
-;;; 20 bytes long (5*4)
+;;; 24 bytes long (6*4)
 ;;; To be extracted with: `movem.l (a6),a0-a4`
 ;;;  0(a6) - a0 - address of animation structure
 ;;;  4(a6) - a1 - address of picture structure
 ;;;  8(a6) - a2 - address of fx_stretch structure
 ;;; 12(a6) - a3 - address of fx_offset structure
 ;;; 16(a6) - a4 - address of fx_wave structure
+;;; 20(a6) - a5 - address of pic_offset controller
 fx_next_frame
         movem.l d0-d7/a0-a6,-(sp)
         move.l  a6,a5           ; fx structure in a5
         move.l  4(a5),a4        ; picture structure in a4
+
+        move.l  20(a5),a6
+        jsr     process_controller ; controller data pointed by a6
 
         ;; Compute stretching ratio
         move.l  8(a5),a6
@@ -181,7 +202,7 @@ fx_next_frame
         move.w  d1,d0
         asl.w   #2,d1   ; *64
         add.w   d0,d1   ; *80
-        move.l  d1,0(a4)        ; picture offset into picture struct
+        ;move.l  d1,0(a4)        ; picture offset into picture struct
 
         ;; Retrieve address of picture to display
         move.l  0(a5),a6
@@ -193,6 +214,56 @@ fx_next_frame
         jsr     picdisplay_stretched_4colors
 
         movem.l (sp)+,d0-d7/a0-a6
+        rts
+
+;;; Parameters:
+;;; a6 - address of controller structure (22 bytes = 7*2+2*4)
+;;; Controller structure:
+;;;  0(a6) - (0,1,2) inactive/linear/table
+;;;  2(a6) - d0 - Value step / 2 when Table
+;;;  4(a6) - d1 - Current value / Table index
+;;;  6(a6) - d2 - linear/table_index modulus
+;;;  8(a6) - d3 - X - of X/Y speed factor
+;;; 10(a6) - d4 - Y - of X/Y speed factor
+;;; 12(a6) - d5 - Z - of speed factor
+;;; 14(a6) - Address of parameter to control
+;;; 18(a6) - Table address (if any)
+process_controller:
+        movem.l d1-d7/a0-a6,-(sp)
+        cmpi.w  #0,(a6)
+        beq     .end
+
+        movem.w 2(a6),d0-d5
+        sub.w   d3,d5           ; Substract X from Z
+        ;; As long as Z<0 increase Z by Y
+        ;;   Also increase current value by value step
+        bpl     .z_positive
+        .z_negative:
+        add.w   d0,d1           ; increase current value by value step
+        add.w   d4,d5           ; increase Z by Y
+        bmi     .z_negative
+        .z_positive:
+        ;; modulus d2
+        cmp.w   d2,d1
+        blt     .mod_d2
+        sub.w   d2,d1
+        .mod_d2:
+
+        ;; Store updated values
+        move.w  d1,4(a6)
+        move.w  d5,12(a6)
+
+        ;; Parameter is a long (for now)
+        move.l  14(a6),a0       ; a0 - address of parameter to update
+        move.l  d1,(a0)
+        cmpi.w  #2,(a6)         ; Use value from table if table mode
+        bne     .end
+        ;; Using Table
+        move.l  18(a6),a1       ;a1 - address of lookup table
+        move.l  (a6,d1),(a0)
+
+        .end:
+        movem.l (sp)+,d1-d7/a0-a6
         rts
 
 ;;; Requires:
@@ -271,7 +342,7 @@ get_current_image_address:
         movem.l (sp)+,d0-d3/a0
         rts
 
-;;; picture_struct
+;;; picture_structure
 ;;; Parameters are stored at an address (usually in the stack)
 ;;; pointed to by a6
 ;;; To be extracted with: `movem.l (a6),d1-d4/a0-a4`
@@ -279,11 +350,11 @@ get_current_image_address:
 ;;; 16(a6) - a0 - phy_base_addr base address of screen physical memory
 ;;; 20(a6) - a1 - pic_base_addr base address of picture to display
 ;;; 24(a6) - a2 - wave_base_addr base address of wave table
-;;;  0(a6) - d1 - pic_offset initial offset in picture - multiple of 80
-;;;  4(a6) - d2 - wave_offset initial offset in wave table - multiple of 2
-;;;  8(a6) - d3 - d3/a3 pic_X/pic_Y picture ratio (stretching)
+;;;  0(a6) - d1 - pic_offset offset in picture - multiple of 80
+;;;  4(a6) - d2 - wave_offset offset in wave table - multiple of 2
+;;;  8(a6) - d3 - d3/a3 pic_X/pic_Y pic_ratio (stretching)
 ;;; 28(a6) - a3
-;;; 12(a6) - d4 - d4/a4 sin_X/sin_Y wave ratio
+;;; 12(a6) - d4 - d4/a4 sin_X/sin_Y wave_ratio
 ;;; 32(a6) - a4
 picdisplay_stretched_4colors:
         movem.l a0-a6/d0-d7,-(sp)       ; save registers in stack
