@@ -162,16 +162,13 @@ wait_next_hz200:
 ;;; 16(a6) - a4 - address of fx_wave structure
 fx_next_frame
         movem.l d0-d7/a0-a6,-(sp)
-        movem.l (a6),a0-a4
+        move.l  a6,a5           ; fx structure in a5
+        move.l  4(a5),a4        ; picture structure in a4
 
         ;; Compute stretching ratio
-        move.l  a6,-(sp)
-        move.l  a2,a6
+        move.l  8(a5),a6
         jsr     get_next_stretch_X ; into d0
-        move.l  (sp)+,a6
-
-        ;; d0 contains new stretch_X value
-        move.l  d0,8(a1)           ; stretch_X into picture struct
+        move.l  d0,8(a4)           ; stretch_X into picture struct
 
         ;; Compute picture offset to compensate stretching ratio
         move.w  #100,d1
@@ -184,22 +181,16 @@ fx_next_frame
         move.w  d1,d0
         asl.w   #2,d1   ; *64
         add.w   d0,d1   ; *80
-
-        move.l  d1,0(a1)        ; picture offset into picture struct
+        move.l  d1,0(a4)        ; picture offset into picture struct
 
         ;; Retrieve address of picture to display
-        movem.l a1/a5/a6,-(sp)
-        move.l  a0,a6
-        move.l  a1,a5
+        move.l  0(a5),a6
         jsr     get_current_image_address ; into a1 (from a6)
-        move.l  a1,20(a5)       ; 20(a5) is address of picture in picture_struct
-        movem.l (sp)+,a1/a5/a6
+        move.l  a1,20(a4)       ; at address of picture in picture_struct
 
         ;; Display picture
-        move.l  a6,-(sp)
-        move.l  a1,a6
+        move.l  a4,a6
         jsr     picdisplay_stretched_4colors
-        move.l  (sp)+,a6
 
         movem.l (sp)+,d0-d7/a0-a6
         rts
