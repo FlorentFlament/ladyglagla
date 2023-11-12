@@ -55,7 +55,7 @@ fx_wave_animation:
         move.l  #wave_table,24(a1)      ; wave table address
         move.l  #0,0(a1)                ; pic_offset
         move.l  #0,4(a1)                ; wave_offset
-        move.l  #100,8(a1)              ; d3/a3 pic_ratio
+        move.l  #30,8(a1)              ; d3/a3 pic_ratio
         move.l  #100,28(a1)
         move.l  #200,12(a1)               ; d4/a4 wave_ratio
         move.l  #100,32(a1)
@@ -66,10 +66,10 @@ fx_wave_animation:
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize pic_offset controller
-        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
-        move.w  #(2*4),2(a2)       ; Linear step / 2 when word Table
+        move.w  #1,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #80,2(a2)       ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
-        move.w  #(2*256),6(a2) ; linear/table_index modulus
+        move.w  #(80*200),6(a2) ; linear/table_index modulus
         move.w  #100,8(a2)      ; X - of X/Y speed factor
         move.w  #100,10(a2)     ; Y - of X/Y speed factor
         move.w  #0,12(a2)       ; Z - of speed factor
@@ -82,7 +82,7 @@ fx_wave_animation:
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize pic_ratio controller
-        move.w  #0,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
         move.w  #2,2(a2)        ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
         move.w  #(2*256),6(a2)  ; linear/table_index modulus
@@ -100,7 +100,7 @@ fx_wave_animation:
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize wave_offset controller
         move.w  #1,0(a2)        ; (0,1,2) inactive/linear/table
-        move.w  #(2*10),2(a2)        ; Linear step / 2 when word Table
+        move.w  #(2*8),2(a2)   ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
         move.w  #(2*256),6(a2)  ; linear/table_index modulus
         move.w  #100,8(a2)      ; X - of X/Y speed factor
@@ -318,109 +318,135 @@ get_current_image_address:
 ;;; 32(a6) - a4
 picdisplay_stretched_4colors:
         movem.l a0-a6/d0-d7,-(sp)       ; save registers in stack
+        sub.w   #(2*220),sp             ; 200 words to computes lines stretching
         movem.l (a6),d1-d4/a0-a4        ; retrieve registers values from a6
 
-        ;; Some initialization
-        lea.l   (200*160)(a0),a5        ; phy_end - End of screen physical mem
+        ;; Pic stretching phase
+        ;; d3,a3,d5 as X,Y,Z for ratio computation
+        ;; d1 is picture displacement (initially offset)
+
+        ;; Compute picture offset compensated for stretching ratio
+        move.w  #100,d0
+        sub.w   d3,d0
+        asl.w   #4,d0           ; *16
+        move.w  d0,d7
+        asl.w   #2,d0           ; *64
+        add.w   d7,d0           ; *80
+        add.w   d0,d1           ; Add compensation do provided offset
+
+        ;; Offset mod 200
+        bpl     .offset_positive
+        add.w   #(80*200),d1
+        .offset_positive:
+        cmp.w   #(80*200),d1
+        blt     .offset_mod200
+        sub.w   #(80*200),d1
+        .offset_mod200:
+
+        ;; Initialize stretching loop
         move.w  a3,d5                   ; pic_Z - pic ratio computation
         subq.w  #1,d5                   ; minus 1
-        move.w  a4,d6                   ; sin_Z - sin ratio computation
-        subq.w  #1,d6                   ; minus 1
-
-.picdisplay_loop:
-        ;; a0 - phy_line_addr is the address of the current physical line
-        ;; d1 - pic_line_offset is the offset of the current picture line
-        ;;      without wave offset
-        ;; d2 - wave_offset is the wave_offset in the wave_table
-        ;; d0 - is the sum mod 200
-
-        move.w  (a2,d2),d0      ; can be negative
-        add.w   d1,d0
-        bpl     .offset_positive
-        add.w   #(200*80),d0
-.offset_positive:
-        cmp.w   #(200*80),d0
-        blt     .offset_mod200
-        sub.w   #(200*80),d0
-.offset_mod200:
-
-        ;; Display a line
-        REPT 20
-        move.l  REPTN*4(a1,d0),REPTN*8(a0) ; <-
-        ENDR
-
-        ;; *** Prepare next picture line *** ;;
+        move.w  #0,d0           ; Our memory counter
+        .stretch_loop:
+        move.w  d1,(sp,d0)
 
         ;; Compute next picture line (considering picture stretch ratio)
         ;; Substract pic_X from pic_Z
         sub.w   d3,d5
         ;; As long as pic_Z <0 increase it by pic_Y and increase pic_line_addr
         bpl     .picz_positive
-.picz_negative:
+        .picz_negative:
         add.w   #80,d1
         add.w   a3,d5
         bmi     .picz_negative
-.picz_positive:
+        .picz_positive:
         cmp.w   #(200*80),d1
-        blt     .picz_mod200
+        blt     .picline_mod200
         sub.w   #(200*80),d1
-.picz_mod200:
+        .picline_mod200:
+
+        add.w   #2,d0           ; words
+        cmp.w   #(2*220),d0
+        blt     .stretch_loop
+
+        ;; Wave FX and copying picture lines in screen memory
+
+        ;; d4,a4,d5 as X,Y,Z for ratio computation
+        ;; d2 is wave displacement (initially offset)
+        move.w  a4,d5                   ; sin_Z - sin ratio computation
+        subq.w  #1,d5                   ; minus 1
+        lea.l   10(sp),a5
+        move.w  #0,d0                   ; index in stretched lines
+.picdisplay_loop:
+        ;; a0 - phy_line_addr is the address of the current physical line
+        ;; a1 - pic_base_addr base address of picture to display
+        ;; a2 - wave_base_addr base address of wave table
+
+        move.w  (a2,d2),d1      ; can be negative
+        add.w   d0,d1           ; index modified by wave
+        move.w  (a5,d1),d1      ; line offset in d1 (multiple of 80)
+
+        ;; Display a line
+        REPT 20
+        move.l  REPTN*4(a1,d1),REPTN*8(a0)
+        ENDR
 
         ;; Compute next sintable offset (considering sin table stretch ratio)
         ;; Substract sin_X from sin_Z
-        sub.w   d4,d6
+        sub.w   d4,d5
         ;; As long as sin_Z<0 increase it by sin_Y and increase sin_table_offset
         bpl     .sinz_positive
 .sinz_negative:
         add.w   #2,d2
-        add.w   a4,d6
+        add.w   a4,d5
         bmi     .sinz_negative
 .sinz_positive:
         and.w   #$01ff,d2       ; d2 % 512
 
         add.w   #160,a0         ; next video buffer line (a4)
-
-        cmp.l   a5,a0           ; Loop until end of display areay is reached
+        add.w   #2,d0
+        cmp.l   #(2*200),d0      ; Loop until end of display areay is reached
         blt     .picdisplay_loop
 
+        add.w   #(2*220),sp
         movem.l (sp)+,a0-a6/d0-d7       ; restore registers from stack
         rts
 
 
         section wave_table,data
 wave_table:
-        dc.w $0000, $0000, $0000, $0050, $0050, $0050, $0050, $00a0
-        dc.w $00a0, $00a0, $00a0, $00f0, $00f0, $00f0, $00f0, $0140
-        dc.w $0140, $0140, $0140, $0140, $0190, $0190, $0190, $0190
-        dc.w $01e0, $01e0, $01e0, $01e0, $01e0, $0230, $0230, $0230
-        dc.w $0230, $0230, $0230, $0280, $0280, $0280, $0280, $0280
-        dc.w $0280, $0280, $02d0, $02d0, $02d0, $02d0, $02d0, $02d0
-        dc.w $02d0, $02d0, $02d0, $02d0, $0320, $0320, $0320, $0320
-        dc.w $0320, $0320, $0320, $0320, $0320, $0320, $0320, $0320
-        dc.w $0320, $0320, $0320, $0320, $0320, $0320, $0320, $0320
-        dc.w $0320, $0320, $0320, $0320, $0320, $02d0, $02d0, $02d0
-        dc.w $02d0, $02d0, $02d0, $02d0, $02d0, $02d0, $02d0, $0280
-        dc.w $0280, $0280, $0280, $0280, $0280, $0280, $0230, $0230
-        dc.w $0230, $0230, $0230, $0230, $01e0, $01e0, $01e0, $01e0
-        dc.w $01e0, $0190, $0190, $0190, $0190, $0140, $0140, $0140
-        dc.w $0140, $0140, $00f0, $00f0, $00f0, $00f0, $00a0, $00a0
-        dc.w $00a0, $00a0, $0050, $0050, $0050, $0050, $0000, $0000
-        dc.w $0000, $0000, $0000, $ffb0, $ffb0, $ffb0, $ffb0, $ff60
-        dc.w $ff60, $ff60, $ff60, $ff10, $ff10, $ff10, $ff10, $fec0
-        dc.w $fec0, $fec0, $fec0, $fec0, $fe70, $fe70, $fe70, $fe70
-        dc.w $fe20, $fe20, $fe20, $fe20, $fe20, $fdd0, $fdd0, $fdd0
-        dc.w $fdd0, $fdd0, $fdd0, $fd80, $fd80, $fd80, $fd80, $fd80
-        dc.w $fd80, $fd80, $fd30, $fd30, $fd30, $fd30, $fd30, $fd30
-        dc.w $fd30, $fd30, $fd30, $fd30, $fce0, $fce0, $fce0, $fce0
-        dc.w $fce0, $fce0, $fce0, $fce0, $fce0, $fce0, $fce0, $fce0
-        dc.w $fce0, $fce0, $fce0, $fce0, $fce0, $fce0, $fce0, $fce0
-        dc.w $fce0, $fce0, $fce0, $fce0, $fce0, $fd30, $fd30, $fd30
-        dc.w $fd30, $fd30, $fd30, $fd30, $fd30, $fd30, $fd30, $fd80
-        dc.w $fd80, $fd80, $fd80, $fd80, $fd80, $fd80, $fdd0, $fdd0
-        dc.w $fdd0, $fdd0, $fdd0, $fdd0, $fe20, $fe20, $fe20, $fe20
-        dc.w $fe20, $fe70, $fe70, $fe70, $fe70, $fec0, $fec0, $fec0
-        dc.w $fec0, $fec0, $ff10, $ff10, $ff10, $ff10, $ff60, $ff60
-        dc.w $ff60, $ff60, $ffb0, $ffb0, $ffb0, $ffb0, $0000, $0000
+        dc.w $0000, $0000, $0000, $0002, $0002, $0002, $0002, $0004
+        dc.w $0004, $0004, $0004, $0006, $0006, $0006, $0006, $0008
+        dc.w $0008, $0008, $0008, $0008, $000a, $000a, $000a, $000a
+        dc.w $000c, $000c, $000c, $000c, $000c, $000e, $000e, $000e
+        dc.w $000e, $000e, $000e, $0010, $0010, $0010, $0010, $0010
+        dc.w $0010, $0010, $0012, $0012, $0012, $0012, $0012, $0012
+        dc.w $0012, $0012, $0012, $0012, $0014, $0014, $0014, $0014
+        dc.w $0014, $0014, $0014, $0014, $0014, $0014, $0014, $0014
+        dc.w $0014, $0014, $0014, $0014, $0014, $0014, $0014, $0014
+        dc.w $0014, $0014, $0014, $0014, $0014, $0012, $0012, $0012
+        dc.w $0012, $0012, $0012, $0012, $0012, $0012, $0012, $0010
+        dc.w $0010, $0010, $0010, $0010, $0010, $0010, $000e, $000e
+        dc.w $000e, $000e, $000e, $000e, $000c, $000c, $000c, $000c
+        dc.w $000c, $000a, $000a, $000a, $000a, $0008, $0008, $0008
+        dc.w $0008, $0008, $0006, $0006, $0006, $0006, $0004, $0004
+        dc.w $0004, $0004, $0002, $0002, $0002, $0002, $0000, $0000
+        dc.w $0000, $0000, $0000, $fffe, $fffe, $fffe, $fffe, $fffc
+        dc.w $fffc, $fffc, $fffc, $fffa, $fffa, $fffa, $fffa, $fff8
+        dc.w $fff8, $fff8, $fff8, $fff8, $fff6, $fff6, $fff6, $fff6
+        dc.w $fff4, $fff4, $fff4, $fff4, $fff4, $fff2, $fff2, $fff2
+        dc.w $fff2, $fff2, $fff2, $fff0, $fff0, $fff0, $fff0, $fff0
+        dc.w $fff0, $fff0, $ffee, $ffee, $ffee, $ffee, $ffee, $ffee
+        dc.w $ffee, $ffee, $ffee, $ffee, $ffec, $ffec, $ffec, $ffec
+        dc.w $ffec, $ffec, $ffec, $ffec, $ffec, $ffec, $ffec, $ffec
+        dc.w $ffec, $ffec, $ffec, $ffec, $ffec, $ffec, $ffec, $ffec
+        dc.w $ffec, $ffec, $ffec, $ffec, $ffec, $ffee, $ffee, $ffee
+        dc.w $ffee, $ffee, $ffee, $ffee, $ffee, $ffee, $ffee, $fff0
+        dc.w $fff0, $fff0, $fff0, $fff0, $fff0, $fff0, $fff2, $fff2
+        dc.w $fff2, $fff2, $fff2, $fff2, $fff4, $fff4, $fff4, $fff4
+        dc.w $fff4, $fff6, $fff6, $fff6, $fff6, $fff8, $fff8, $fff8
+        dc.w $fff8, $fff8, $fffa, $fffa, $fffa, $fffa, $fffc, $fffc
+        dc.w $fffc, $fffc, $fffe, $fffe, $fffe, $fffe, $0000, $0000
 
 wave_ratio_table:
 pic_ratio_table:

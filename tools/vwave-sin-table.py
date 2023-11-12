@@ -8,7 +8,7 @@ def gum_func(x):
     return 10*math.sin(2*math.pi/256 * x)
 
 def gum_table():
-    return [80*round(gum_func(x)) for x in range(256)]
+    return [2*round(gum_func(x)) for x in range(256)]
 
 def main():
     D = gum_table()
