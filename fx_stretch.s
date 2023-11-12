@@ -257,8 +257,8 @@ process_controller:
         cmpi.w  #2,(a6)         ; Use value from table if table mode
         bne     .end
         ;; Using Table
-        move.l  18(a6),a1       ;a1 - address of lookup table
-        move.l  (a1,d1),(a0)
+        move.l  18(a6),a1       ; a1 - address of lookup table
+        move.w  (a1,d1),2(a0)   ; words table
 
         .end:
         movem.l (sp)+,d1-d7/a0-a6
