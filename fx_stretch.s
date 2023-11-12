@@ -57,7 +57,7 @@ fx_wave_animation:
         move.l  #0,4(a1)                ; wave_offset
         move.l  #100,8(a1)              ; d3/a3 pic_ratio
         move.l  #100,28(a1)
-        move.l  #1,12(a1)               ; d4/a4 wave_ratio
+        move.l  #200,12(a1)               ; d4/a4 wave_ratio
         move.l  #100,32(a1)
         ;; Store structrure address into fx structure
         move.l  a1,4(a0)
@@ -66,15 +66,15 @@ fx_wave_animation:
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize pic_offset controller
-        move.w  #1,0(a2)        ; (0,1,2) inactive/linear/table
-        move.w  #80,2(a2)       ; Linear step / 2 when word Table
+        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #(2*4),2(a2)       ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
-        move.w  #(80*200),6(a2) ; linear/table_index modulus
+        move.w  #(2*256),6(a2) ; linear/table_index modulus
         move.w  #100,8(a2)      ; X - of X/Y speed factor
         move.w  #100,10(a2)     ; Y - of X/Y speed factor
         move.w  #0,12(a2)       ; Z - of speed factor
         move.l  a1,14(a2)       ; Address of parameter to control
-        move.l  #0,18(a2)       ; Table address (if any)
+        move.l  #wave_table,18(a2)       ; Table address (if any)
         ;; Store structrure address into fx structure
         move.l  a2,8(a0)
 
@@ -82,7 +82,7 @@ fx_wave_animation:
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize pic_ratio controller
-        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #0,0(a2)        ; (0,1,2) inactive/linear/table
         move.w  #2,2(a2)        ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
         move.w  #(2*256),6(a2)  ; linear/table_index modulus
