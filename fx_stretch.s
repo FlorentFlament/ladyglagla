@@ -57,8 +57,8 @@ fx_wave_animation:
         move.l  #0,4(a1)                ; wave_offset
         move.l  #100,8(a1)              ; d3/a3 pic_ratio
         move.l  #100,28(a1)
-        move.l  #1,12(a1)               ; d4/a4 wave_ration
-        move.l  #1000,32(a1)
+        move.l  #1,12(a1)               ; d4/a4 wave_ratio
+        move.l  #100,32(a1)
         ;; Store structrure address into fx structure
         move.l  a1,4(a0)
 
@@ -76,40 +76,58 @@ fx_wave_animation:
         move.l  a1,14(a2)       ; Address of parameter to control
         move.l  #0,18(a2)       ; Table address (if any)
         ;; Store structrure address into fx structure
+        move.l  a2,8(a0)
+
+        ;; Allocate pic_ratio controller - (7*2+2*4)=22 bytes
+        sub.w   #22,sp
+        move.l  sp,a2           ; a1 points to the animation structure
+        ;; Initialize pic_ratio controller
+        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #2,2(a2)        ; Linear step / 2 when word Table
+        move.w  #0,4(a2)        ; Current value / Table index
+        move.w  #(2*256),6(a2)  ; linear/table_index modulus
+        move.w  #100,8(a2)      ; X - of X/Y speed factor
+        move.w  #100,10(a2)     ; Y - of X/Y speed factor
+        move.w  #0,12(a2)       ; Z - of speed factor
+        lea.l   8(a1),a3
+        move.l  a3,14(a2)       ; Address of parameter to control
+        move.l  #pic_ratio_table,18(a2)       ; Table address (if any)
+        ;; Store structure address into fx structure
+        move.l  a2,12(a0)
+
+        ;; Allocate wave_offset controller - (7*2+2*4)=22 bytes
+        sub.w   #22,sp
+        move.l  sp,a2           ; a1 points to the animation structure
+        ;; Initialize wave_offset controller
+        move.w  #1,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #(2*10),2(a2)        ; Linear step / 2 when word Table
+        move.w  #0,4(a2)        ; Current value / Table index
+        move.w  #(2*256),6(a2)  ; linear/table_index modulus
+        move.w  #100,8(a2)      ; X - of X/Y speed factor
+        move.w  #100,10(a2)     ; Y - of X/Y speed factor
+        move.w  #0,12(a2)       ; Z - of speed factor
+        lea.l   4(a1),a3        ; Address of parameter to control
+        move.l  a3,14(a2)
+        move.l  #0,18(a2)       ; Table address (if any)
+        ;; Store structrure address into fx structure
+        move.l  a2,16(a0)
+
+        ;; Allocate wave_ratio controller - (7*2+2*4)=22 bytes
+        sub.w   #22,sp
+        move.l  sp,a2           ; a1 points to the animation structure
+        ;; Initialize wave_ratio controller
+        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #4,2(a2)        ; Linear step / 2 when word Table
+        move.w  #0,4(a2)        ; Current value / Table index
+        move.w  #(2*256),6(a2)  ; linear/table_index modulus
+        move.w  #100,8(a2)      ; X - of X/Y speed factor
+        move.w  #100,10(a2)     ; Y - of X/Y speed factor
+        move.w  #0,12(a2)       ; Z - of speed factor
+        lea.l   12(a1),a3       ; Address of parameter to control
+        move.l  a3,14(a2)
+        move.l  #wave_ratio_table,18(a2)       ; Table address (if any)
+        ;; Store structure address into fx structure
         move.l  a2,20(a0)
-
-        ;; Allocate 4 words for fx_stretch structure
-        sub.w   #8,sp
-        move.l  sp,a1           ; a2 points to the fx_stretch structure
-        ;; Initialize fx_stretch structure
-        move.w  #0,0(a1)       ; stretch_X - stretch_ratio_speed (X/Y)
-        move.w  #100,2(a1)     ; stretch_Y
-        move.w  #0,4(a1)       ; stretch_Z
-        move.w  #0,6(a1)       ; stretch_index
-        ;; Store structrure address into fx structure
-        move.l  a1,8(a0)
-
-        ;; Allocate 4 words for fx_offset structure
-        sub.w   #8,sp
-        move.l  sp,a1           ; a3 points to the fx_offset structure
-        ;; Initialize fx_offset structure
-        move.w  #0,0(a1)       ; offset_X - offset_ratio_speed (X/Y)
-        move.w  #0,2(a1)       ; offset_Y
-        move.w  #0,4(a1)       ; offset_Z
-        move.w  #0,6(a1)       ; offset_index
-        ;; Store structrure address into fx structure
-        move.l  a1,12(a0)
-
-        ;; Allocate 4 words for fx_wave structure
-        sub.w   #8,sp
-        move.l  sp,a1           ; a4 points to the fx_wave structure
-        ;; Initialize fx_wave structure
-        move.w  #1,0(a1)       ; wave_X - wave_ratio_speed (X/Y)
-        move.w  #1000,2(a1)    ; wave_Y
-        move.w  #0,4(a1)       ; wave_Z
-        move.w  #0,6(a1)       ; wave_index
-        ;; Store structrure address into fx structure
-        move.l  a1,16(a0)
 
         ;; set palette
         move.l  (a5),a3
@@ -119,7 +137,7 @@ fx_wave_animation:
         move.l  a0,a6
         jsr fx_loop             ; with fx structure in a6
 
-        add.w   #(24+16+36+22+8+8+8),sp           ; Allocate 3 longs and 1 word
+        add.w   #(24+16+36+22+22+22+22),sp    ; Allocate 3 longs and 1 word
         movem.l (sp)+,a0-a6/d0-d7
         rts
 
@@ -129,21 +147,13 @@ fx_loop:
         movem.l a0-a6/d0-d7,-(sp)
 
         ;; Animation Loop
-        lea.l   stretch_speed_table,a0 ; for stretch speed trajectory
-        move.l  8(a6),a1               ; fx_stretch structure in a1
-
         jsr     get_hz_200      ; into d0
         move.l  d0,d6           ; hz_200 is in d6
         add.l   #FX_HZ200_PERIOD,d6
+
         move.w  #0,d7           ; frame counter is in d7
-
         .loop:
-        move.w  d7,d0           ; for stretch speed lookup
-        lsr.w   #3,d0           ; /8
-        asl.w   #1,d0
-        move.w  (a0,d0),(a1)    ; update stretch X
         jsr     fx_next_frame   ; with fx structure in a6
-
         ;; Update loop parameters
         jsr     wait_next_hz200   ; d6 contains next hz200 to wait for
         add.l   #FX_HZ200_PERIOD,d6
@@ -172,37 +182,25 @@ wait_next_hz200:
 ;;; Requires an FX structure in a6
 ;;; 24 bytes long (6*4)
 ;;; To be extracted with: `movem.l (a6),a0-a4`
-;;;  0(a6) - a0 - address of animation structure
-;;;  4(a6) - a1 - address of picture structure
-;;;  8(a6) - a2 - address of fx_stretch structure
-;;; 12(a6) - a3 - address of fx_offset structure
-;;; 16(a6) - a4 - address of fx_wave structure
-;;; 20(a6) - a5 - address of pic_offset controller
+;;;  0(a6) - address of animation structure
+;;;  4(a6) - address of picture structure
+;;;  8(a6) - address of pic_offset controller
+;;; 12(a6) - address of pic_ratio controller
+;;; 16(a6) - address of wave_offset controller
+;;; 20(a6) - address of wave_ratio controller
 fx_next_frame
         movem.l d0-d7/a0-a6,-(sp)
         move.l  a6,a5           ; fx structure in a5
         move.l  4(a5),a4        ; picture structure in a4
 
-        move.l  20(a5),a6
-        jsr     process_controller ; controller data pointed by a6
-
-        ;; Compute stretching ratio
         move.l  8(a5),a6
-        jsr     get_next_stretch_X ; into d0
-        move.l  d0,8(a4)           ; stretch_X into picture struct
-
-        ;; Compute picture offset to compensate stretching ratio
-        move.w  #100,d1
-        sub.w   d0,d1
-        ;; Ensure offset is in picture
-        bpl     .offset_positive
-        add.w   #200,d1         ; Add picture size
-        .offset_positive:
-        asl.w   #4,d1   ; *16
-        move.w  d1,d0
-        asl.w   #2,d1   ; *64
-        add.w   d0,d1   ; *80
-        ;move.l  d1,0(a4)        ; picture offset into picture struct
+        jsr     process_controller ; pic_offset controller
+        move.l  12(a5),a6
+        jsr     process_controller ; pic_ratio controller
+        move.l  16(a5),a6
+        jsr     process_controller ; wave_offset controller
+        move.l  20(a5),a6
+        jsr     process_controller ; wave_ratio controller
 
         ;; Retrieve address of picture to display
         move.l  0(a5),a6
@@ -260,47 +258,9 @@ process_controller:
         bne     .end
         ;; Using Table
         move.l  18(a6),a1       ;a1 - address of lookup table
-        move.l  (a6,d1),(a0)
+        move.l  (a1,d1),(a0)
 
         .end:
-        movem.l (sp)+,d1-d7/a0-a6
-        rts
-
-;;; Requires:
-;;; a6 - an fx_stretch structure
-;;; Returns:
-;;; d0 - pic_X picture stretch ratio (not to be confused with stretch_X)
-;;; Note: stretch_X is not updated there
-;;; fx_stretch structure:
-;;; 0(a6) - d1 - stretch_X
-;;; 2(a6) - d2 - stretch_Y
-;;; 4(a6) - d3 - stretch_Z
-;;; 6(a6) - d4 - stretch_index
-get_next_stretch_X:
-        movem.l d1-d7/a0-a6,-(sp)
-        movem.w (a6),d1-d4
-
-        ;; Compute next stretch index
-        ;; Substract stretch_X from stretch_Z
-        sub.w   d1,d3
-        ;; As long as stretch_Z<0 increase it by stretch_Y
-        ;;   Also increase stretch index
-        bpl     .stretchz_positive
-.sinz_negative:
-        add.w   #2,d4           ; increase by a word
-        add.w   d2,d3
-        bmi     .sinz_negative
-.stretchz_positive:
-        and.w   #$01ff,d4       ; 256 items but left-shifted
-
-        ;; Update stretch_z and stretch_index into fx_stretch structure
-        move.w  d3,4(a6)
-        move.w  d4,6(a6)
-
-        ;; return pic_X value in d0
-        lea     picstretch_table,a0
-        move.w  (a0,d4),d0      ; d0 is in [50; 200]
-
         movem.l (sp)+,d1-d7/a0-a6
         rts
 
@@ -342,7 +302,7 @@ get_current_image_address:
         movem.l (sp)+,d0-d3/a0
         rts
 
-;;; picture_structure
+;;; Picture structure
 ;;; Parameters are stored at an address (usually in the stack)
 ;;; pointed to by a6
 ;;; To be extracted with: `movem.l (a6),d1-d4/a0-a4`
@@ -462,7 +422,8 @@ wave_table:
         dc.w $fec0, $fec0, $ff10, $ff10, $ff10, $ff10, $ff60, $ff60
         dc.w $ff60, $ff60, $ffb0, $ffb0, $ffb0, $ffb0, $0000, $0000
 
-picstretch_table:
+wave_ratio_table:
+pic_ratio_table:
         dc.w $0064, $0066, $0068, $0069, $006b, $006d, $006f, $0070
         dc.w $0072, $0074, $0076, $0078, $007a, $007b, $007d, $007f
         dc.w $0081, $0083, $0085, $0086, $0088, $008a, $008c, $008e
