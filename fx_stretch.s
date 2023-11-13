@@ -26,12 +26,12 @@ ANIMATION_HZ200_PERIOD=25       ; 1 image every 25 hz200 i.e 8 FPS
 ;;; a5 - animation address
 ;;; a6 - animation sequence
 fx_wave_animation:
-        movem.l a0-a6/d0-d7,-(sp)
+        movem.l d0-d7/a0-a6,-(sp)
         ;; Initialize fx structures before calling main fx loop
 
-        ;; Allocate 7 longs for fx structure
+        ;; Allocate 10 longs for fx structure
         ;; It encapsulates very other structure
-        sub.w   #28,sp          ; sp
+        sub.w   #40,sp          ; sp
         move.l  sp,a0           ; a0 points to the fx structure
 
         ;; Allocate 4 longs for animation structure
@@ -79,6 +79,17 @@ fx_wave_animation:
         ;; Store structrure address into fx structure
         move.l  a2,8(a0)
 
+        ;; Allocate pic_offset meta controller
+        sub.w   #10,sp
+        move.l  sp,a3
+        ;; Initialization
+        move.w  #0,0(a3) ; 0/1 inactive/active
+        move.l  #pic_offset_sequence,2(a3) ; sequence table
+        lea.l   8(a2),a6 ; parameter to control
+        move.l  a6,6(a3)
+        ;; Store structure into fx struct
+        move.l  a3,24(a0)
+
         ;; Allocate pic_ratio controller - (7*2+2*4)=22 bytes
         sub.w   #22,sp
         move.l  sp,a2
@@ -101,11 +112,11 @@ fx_wave_animation:
         move.l  sp,a3
         ;; Initialization
         move.w  #1,0(a3) ; 0/1 inactive/active
-        move.l  #pic_ratio_seq,2(a3) ; sequence table
+        move.l  #pic_ratio_sequence,2(a3) ; sequence table
         lea.l   8(a2),a6 ; parameter to control
         move.l  a6,6(a3)
         ;; Store structure into fx struct
-        move.l  a3,24(a0)
+        move.l  a3,28(a0)
 
         ;; Allocate wave_offset controller - (7*2+2*4)=22 bytes
         sub.w   #22,sp
@@ -124,6 +135,17 @@ fx_wave_animation:
         ;; Store structrure address into fx structure
         move.l  a2,16(a0)
 
+        ;; Allocate wave_offset meta controller
+        sub.w   #10,sp
+        move.l  sp,a3
+        ;; Initialization
+        move.w  #0,0(a3) ; 0/1 inactive/active
+        move.l  #wave_offset_sequence,2(a3) ; sequence table
+        lea.l   8(a2),a6 ; parameter to control
+        move.l  a6,6(a3)
+        ;; Store structure into fx struct
+        move.l  a3,32(a0)
+
         ;; Allocate wave_ratio controller - (7*2+2*4)=22 bytes
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
@@ -141,6 +163,17 @@ fx_wave_animation:
         ;; Store structure address into fx structure
         move.l  a2,20(a0)
 
+        ;; Allocate wave_ratio meta controller
+        sub.w   #10,sp
+        move.l  sp,a3
+        ;; Initialization
+        move.w  #0,0(a3) ; 0/1 inactive/active
+        move.l  #wave_ratio_sequence,2(a3) ; sequence table
+        lea.l   8(a2),a6 ; parameter to control
+        move.l  a6,6(a3)
+        ;; Store structure into fx struct
+        move.l  a3,36(a0)
+
         ;; set palette
         move.l  (a5),a3
         jsr     set_palette
@@ -149,8 +182,9 @@ fx_wave_animation:
         move.l  a0,a6
         jsr fx_loop             ; with fx structure in a6
 
-        add.w   #(28+16+36+22+22+10+22+22),sp    ; Allocate 3 longs and 1 word
-        movem.l (sp)+,a0-a6/d0-d7
+        ;; release allocated structures
+        add.w   #(40+16+36+22+10+22+10+22+10+22+10),sp
+        movem.l (sp)+,d0-d7/a0-a6
         rts
 
 ;;; Parameters
@@ -171,8 +205,7 @@ fx_loop:
         add.l   #FX_HZ200_PERIOD,d6
 
         addq.w  #1,d7
-        cmp.w   #1022,d7         ; 40 fps - 1024 - 25.6 secs - 32 beats (75 bpm)
-        ;; cmp.w   #254,d7         ; 40 fps - 256 - 8 beats
+        cmp.w   #958,d7 ; 40 fps - 32 frames per beat - 30 beats - 24 seconds
         blt     .loop
 
         movem.l (sp)+,a0-a6/d0-d7
@@ -201,13 +234,22 @@ wait_next_hz200:
 ;;;     12(a6) - address of pic_ratio controller
 ;;;     16(a6) - address of wave_offset controller
 ;;;     20(a6) - address of wave_ratio controller
-;;;     24(a6) - address of pic_ratio meta
+;;;     24(a6) - address of pic_offset meta
+;;;     28(a6) - address of pic_ratio meta
+;;;     32(a6) - address of wave_offset meta
+;;;     36(a6) - address of wave_ratio meta
 fx_next_frame
         movem.l d0-d7/a0-a6,-(sp)
         move.l  a6,a5           ; fx structure in a5
         move.l  4(a5),a4        ; picture structure in a4
 
         move.l  24(a5),a6
+        jsr     process_meta ; pic_ratio meta
+        move.l  28(a5),a6
+        jsr     process_meta ; pic_ratio meta
+        move.l  32(a5),a6
+        jsr     process_meta ; pic_ratio meta
+        move.l  36(a5),a6
         jsr     process_meta ; pic_ratio meta
         move.l  8(a5),a6
         jsr     process_controller ; pic_offset controller
@@ -554,7 +596,10 @@ pic_offset_table:
         dc.w $fa10, $fa60, $fab0, $fb00, $fb50, $fbf0, $fc40, $fc90
         dc.w $fce0, $fd30, $fdd0, $fe20, $fe70, $fec0, $ff60, $ffb0
 
-pic_ratio_seq:
+pic_offset_sequence:
+pic_ratio_sequence:
+wave_offset_sequence:
+wave_ratio_sequence:
         dc.w $0000, $0000, $0000, $0000, $0000, $0000, $000a, $0014
         dc.w $001e, $0028, $0032, $003c, $0046, $0050, $005a, $0064
         dc.w $0064, $0064, $0064, $0064, $0064, $0064, $0064, $0064
