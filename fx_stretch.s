@@ -7,6 +7,7 @@
         xdef fx_next_frame
         xdef fx_loop
         xdef process_controller
+        xdef process_meta
 
         xref get_hz_200
         xref set_palette
@@ -28,9 +29,9 @@ fx_wave_animation:
         movem.l a0-a6/d0-d7,-(sp)
         ;; Initialize fx structures before calling main fx loop
 
-        ;; Allocate 5 longs for fx structure
+        ;; Allocate 7 longs for fx structure
         ;; It encapsulates very other structure
-        sub.w   #24,sp          ; sp
+        sub.w   #28,sp          ; sp
         move.l  sp,a0           ; a0 points to the fx structure
 
         ;; Allocate 4 longs for animation structure
@@ -66,7 +67,7 @@ fx_wave_animation:
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize pic_offset controller
-        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #0,0(a2)        ; (0,1,2) inactive/linear/table
         move.w  #2,2(a2)        ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
         move.w  #(2*256),6(a2)  ; linear/table_index modulus
@@ -80,10 +81,10 @@ fx_wave_animation:
 
         ;; Allocate pic_ratio controller - (7*2+2*4)=22 bytes
         sub.w   #22,sp
-        move.l  sp,a2           ; a1 points to the animation structure
+        move.l  sp,a2
         ;; Initialize pic_ratio controller
         move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
-        move.w  #(2*4),2(a2)        ; Linear step / 2 when word Table
+        move.w  #(2*1),2(a2)        ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
         move.w  #(2*256),6(a2)  ; linear/table_index modulus
         move.w  #100,8(a2)      ; X - of X/Y speed factor
@@ -94,6 +95,17 @@ fx_wave_animation:
         move.l  #pic_ratio_table,18(a2)       ; Table address (if any)
         ;; Store structure address into fx structure
         move.l  a2,12(a0)
+
+        ;; Allocate pic_ratio meta controller
+        sub.w   #10,sp
+        move.l  sp,a3
+        ;; Initialization
+        move.w  #1,0(a3) ; 0/1 inactive/active
+        move.l  #pic_ratio_seq,2(a3) ; sequence table
+        lea.l   8(a2),a6 ; parameter to control
+        move.l  a6,6(a3)
+        ;; Store structure into fx struct
+        move.l  a3,24(a0)
 
         ;; Allocate wave_offset controller - (7*2+2*4)=22 bytes
         sub.w   #22,sp
@@ -137,7 +149,7 @@ fx_wave_animation:
         move.l  a0,a6
         jsr fx_loop             ; with fx structure in a6
 
-        add.w   #(24+16+36+22+22+22+22),sp    ; Allocate 3 longs and 1 word
+        add.w   #(28+16+36+22+22+10+22+22),sp    ; Allocate 3 longs and 1 word
         movem.l (sp)+,a0-a6/d0-d7
         rts
 
@@ -159,7 +171,7 @@ fx_loop:
         add.l   #FX_HZ200_PERIOD,d6
 
         addq.w  #1,d7
-        cmp.w   #1022,d7         ; 40 fps - 1024 - 32 beats
+        cmp.w   #1022,d7         ; 40 fps - 1024 - 25.6 secs - 32 beats (75 bpm)
         ;; cmp.w   #254,d7         ; 40 fps - 256 - 8 beats
         blt     .loop
 
@@ -180,20 +192,23 @@ wait_next_hz200:
         movem.l (sp)+,d0-d3/a0-a2
         rts
 
-;;; Requires an FX structure in a6
-;;; 24 bytes long (6*4)
-;;; To be extracted with: `movem.l (a6),a0-a4`
-;;;  0(a6) - address of animation structure
-;;;  4(a6) - address of picture structure
-;;;  8(a6) - address of pic_offset controller
-;;; 12(a6) - address of pic_ratio controller
-;;; 16(a6) - address of wave_offset controller
-;;; 20(a6) - address of wave_ratio controller
+;;; Requires:
+;;; - d7.w - contains the frame counter
+;;; - a6.l - an FX structure - 28 bytes long (6*4)
+;;;      0(a6) - address of animation structure
+;;;      4(a6) - address of picture structure
+;;;      8(a6) - address of pic_offset controller
+;;;     12(a6) - address of pic_ratio controller
+;;;     16(a6) - address of wave_offset controller
+;;;     20(a6) - address of wave_ratio controller
+;;;     24(a6) - address of pic_ratio meta
 fx_next_frame
         movem.l d0-d7/a0-a6,-(sp)
         move.l  a6,a5           ; fx structure in a5
         move.l  4(a5),a4        ; picture structure in a4
 
+        move.l  24(a5),a6
+        jsr     process_meta ; pic_ratio meta
         move.l  8(a5),a6
         jsr     process_controller ; pic_offset controller
         move.l  12(a5),a6
@@ -215,6 +230,27 @@ fx_next_frame
         movem.l (sp)+,d0-d7/a0-a6
         rts
 
+;;; d7 - frame counter
+;;; a6 - meta structure
+;;;      0(a6) - 0/1 inactive/active
+;;;      2(a6) - sequence table
+;;;      6(a6) - parameter to control
+process_meta:
+        movem.l d0-d7/a0-a6,-(sp)
+        cmp.w   #0,(a6)
+        beq     .end
+
+        lsr     #4,d7 ; 40 FPS /16 -> 2.5 meta keys per second
+        asl     #1,d7 ; indexing words (multiple of 2)
+        move.l  2(a6),a0 ; address of sequence table
+        move.l  6(a6),a1 ; address of parameter to control
+        move.w  (a0,d7),(a1)
+
+        .end:
+        movem.l (sp)+,d0-d7/a0-a6
+        rts
+
+
 ;;; Parameters:
 ;;; a6 - address of controller structure (22 bytes = 7*2+2*4)
 ;;; Controller structure:
@@ -228,7 +264,7 @@ fx_next_frame
 ;;; 14(a6) - Address of parameter to control
 ;;; 18(a6) - Table address (if any)
 process_controller:
-        movem.l d1-d7/a0-a6,-(sp)
+        movem.l d0-d7/a0-a6,-(sp)
         cmpi.w  #0,(a6)
         beq     .end
 
@@ -262,7 +298,7 @@ process_controller:
         move.w  (a1,d1),2(a0)   ; words table
 
         .end:
-        movem.l (sp)+,d1-d7/a0-a6
+        movem.l (sp)+,d0-d7/a0-a6
         rts
 
 ;;; Parameters
@@ -517,3 +553,13 @@ pic_offset_table:
         dc.w $f740, $f790, $f7e0, $f830, $f880, $f920, $f970, $f9c0
         dc.w $fa10, $fa60, $fab0, $fb00, $fb50, $fbf0, $fc40, $fc90
         dc.w $fce0, $fd30, $fdd0, $fe20, $fe70, $fec0, $ff60, $ffb0
+
+pic_ratio_seq:
+        dc.w $0000, $0000, $0000, $0000, $0000, $0000, $000a, $0014
+        dc.w $001e, $0028, $0032, $003c, $0046, $0050, $005a, $0064
+        dc.w $0064, $0064, $0064, $0064, $0064, $0064, $0064, $0064
+        dc.w $0064, $0064, $0064, $0064, $0064, $0064, $0064, $0064
+        dc.w $0064, $0064, $0064, $0064, $008c, $00b4, $00dc, $0104
+        dc.w $012c, $0154, $017c, $01a4, $01cc, $01f4, $01f4, $01f4
+        dc.w $01f4, $01f4, $01f4, $01f4, $01f4, $01f4, $01f4, $01f4
+        dc.w $01f4, $01f4, $01f4, $01f4, $01f4, $01f4, $01f4, $01f4

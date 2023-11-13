@@ -5,12 +5,15 @@ from asmlib import render
 
 def table():
     return \
-        list(range(50,800,10)) + \
-        list(range(800,400,-10)) + \
-        [400]*13
+        [0]*5 + \
+        list(range(0,100,10)) + \
+        [100]*20 + \
+        list(range(100,500,40)) + \
+        [500]*19
 
 def main():
     D = table()
+    print(len(D))
     print(render(D, unit='dc.w'))
 
 main()
