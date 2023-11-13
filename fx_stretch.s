@@ -326,7 +326,7 @@ picdisplay_stretched_4colors:
         ;; d1 is picture displacement (initially offset)
 
         ;; Compute picture offset compensated for stretching ratio
-        move.w  #100,d0
+        move.w  #(100+190),d0   ; Also compensate for the headrooms (for wave)
         sub.w   d3,d0
         asl.w   #4,d0           ; *16
         move.w  d0,d7
@@ -375,7 +375,7 @@ picdisplay_stretched_4colors:
         ;; d2 is wave displacement (initially offset)
         move.w  a4,d5                   ; sin_Z - sin ratio computation
         subq.w  #1,d5                   ; minus 1
-        lea.l   10(sp),a5
+        lea.l   (2*10)(sp),a5
         move.w  #0,d0                   ; index in stretched lines
 .picdisplay_loop:
         ;; a0 - phy_line_addr is the address of the current physical line
