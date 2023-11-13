@@ -10,7 +10,7 @@ def sin_func(x):
     return 50*math.sin(2*math.pi/TABLE_LEN * x)
 
 def sin_table():
-    return [round(sin_func(x)) for x in range(TABLE_LEN)]
+    return [80*round(sin_func(x)) for x in range(TABLE_LEN)]
 
 def main():
     D = sin_table()

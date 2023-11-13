@@ -55,9 +55,9 @@ fx_wave_animation:
         move.l  #wave_table,24(a1)      ; wave table address
         move.l  #0,0(a1)                ; pic_offset
         move.l  #0,4(a1)                ; wave_offset
-        move.l  #30,8(a1)              ; d3/a3 pic_ratio
+        move.l  #90,8(a1)              ; d3/a3 pic_ratio
         move.l  #100,28(a1)
-        move.l  #200,12(a1)               ; d4/a4 wave_ratio
+        move.l  #1,12(a1)               ; d4/a4 wave_ratio
         move.l  #100,32(a1)
         ;; Store structrure address into fx structure
         move.l  a1,4(a0)
@@ -66,15 +66,15 @@ fx_wave_animation:
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize pic_offset controller
-        move.w  #1,0(a2)        ; (0,1,2) inactive/linear/table
-        move.w  #80,2(a2)       ; Linear step / 2 when word Table
+        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #2,2(a2)        ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
-        move.w  #(80*200),6(a2) ; linear/table_index modulus
+        move.w  #(2*256),6(a2)  ; linear/table_index modulus
         move.w  #100,8(a2)      ; X - of X/Y speed factor
         move.w  #100,10(a2)     ; Y - of X/Y speed factor
         move.w  #0,12(a2)       ; Z - of speed factor
         move.l  a1,14(a2)       ; Address of parameter to control
-        move.l  #wave_table,18(a2)       ; Table address (if any)
+        move.l  #pic_offset_table,18(a2)       ; Table address (if any)
         ;; Store structrure address into fx structure
         move.l  a2,8(a0)
 
@@ -83,7 +83,7 @@ fx_wave_animation:
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize pic_ratio controller
         move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
-        move.w  #2,2(a2)        ; Linear step / 2 when word Table
+        move.w  #(2*4),2(a2)        ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
         move.w  #(2*256),6(a2)  ; linear/table_index modulus
         move.w  #100,8(a2)      ; X - of X/Y speed factor
@@ -99,7 +99,7 @@ fx_wave_animation:
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize wave_offset controller
-        move.w  #1,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #0,0(a2)        ; (0,1,2) inactive/linear/table
         move.w  #(2*8),2(a2)   ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
         move.w  #(2*256),6(a2)  ; linear/table_index modulus
@@ -116,8 +116,8 @@ fx_wave_animation:
         sub.w   #22,sp
         move.l  sp,a2           ; a1 points to the animation structure
         ;; Initialize wave_ratio controller
-        move.w  #2,0(a2)        ; (0,1,2) inactive/linear/table
-        move.w  #4,2(a2)        ; Linear step / 2 when word Table
+        move.w  #0,0(a2)        ; (0,1,2) inactive/linear/table
+        move.w  #(2*1),2(a2)        ; Linear step / 2 when word Table
         move.w  #0,4(a2)        ; Current value / Table index
         move.w  #(2*256),6(a2)  ; linear/table_index modulus
         move.w  #100,8(a2)      ; X - of X/Y speed factor
@@ -159,7 +159,8 @@ fx_loop:
         add.l   #FX_HZ200_PERIOD,d6
 
         addq.w  #1,d7
-        cmp.w   #1022,d7         ; 40 fps - 512 - 16 beats = 12.8 secs
+        cmp.w   #1022,d7         ; 40 fps - 1024 - 32 beats
+        ;; cmp.w   #254,d7         ; 40 fps - 256 - 8 beats
         blt     .loop
 
         movem.l (sp)+,a0-a6/d0-d7
@@ -482,3 +483,37 @@ pic_ratio_table:
         dc.w $0097, $0095, $0093, $0091, $008f, $008d, $008b, $0089
         dc.w $0087, $0085, $0083, $0081, $007e, $007c, $007a, $0078
         dc.w $0076, $0073, $0071, $006f, $006d, $006b, $0068, $0066
+
+pic_offset_table:
+        dc.w $0000, $0050, $00a0, $0140, $0190, $01e0, $0230, $02d0
+        dc.w $0320, $0370, $03c0, $0410, $04b0, $0500, $0550, $05a0
+        dc.w $05f0, $0640, $0690, $06e0, $0780, $07d0, $0820, $0870
+        dc.w $08c0, $0910, $0960, $09b0, $0a00, $0a50, $0aa0, $0aa0
+        dc.w $0af0, $0b40, $0b90, $0be0, $0c30, $0c30, $0c80, $0cd0
+        dc.w $0d20, $0d20, $0d70, $0dc0, $0dc0, $0e10, $0e10, $0e60
+        dc.w $0e60, $0eb0, $0eb0, $0eb0, $0f00, $0f00, $0f50, $0f50
+        dc.w $0f50, $0f50, $0f50, $0fa0, $0fa0, $0fa0, $0fa0, $0fa0
+        dc.w $0fa0, $0fa0, $0fa0, $0fa0, $0fa0, $0fa0, $0f50, $0f50
+        dc.w $0f50, $0f50, $0f50, $0f00, $0f00, $0eb0, $0eb0, $0eb0
+        dc.w $0e60, $0e60, $0e10, $0e10, $0dc0, $0dc0, $0d70, $0d20
+        dc.w $0d20, $0cd0, $0c80, $0c30, $0c30, $0be0, $0b90, $0b40
+        dc.w $0af0, $0aa0, $0aa0, $0a50, $0a00, $09b0, $0960, $0910
+        dc.w $08c0, $0870, $0820, $07d0, $0780, $06e0, $0690, $0640
+        dc.w $05f0, $05a0, $0550, $0500, $04b0, $0410, $03c0, $0370
+        dc.w $0320, $02d0, $0230, $01e0, $0190, $0140, $00a0, $0050
+        dc.w $0000, $ffb0, $ff60, $fec0, $fe70, $fe20, $fdd0, $fd30
+        dc.w $fce0, $fc90, $fc40, $fbf0, $fb50, $fb00, $fab0, $fa60
+        dc.w $fa10, $f9c0, $f970, $f920, $f880, $f830, $f7e0, $f790
+        dc.w $f740, $f6f0, $f6a0, $f650, $f600, $f5b0, $f560, $f560
+        dc.w $f510, $f4c0, $f470, $f420, $f3d0, $f3d0, $f380, $f330
+        dc.w $f2e0, $f2e0, $f290, $f240, $f240, $f1f0, $f1f0, $f1a0
+        dc.w $f1a0, $f150, $f150, $f150, $f100, $f100, $f0b0, $f0b0
+        dc.w $f0b0, $f0b0, $f0b0, $f060, $f060, $f060, $f060, $f060
+        dc.w $f060, $f060, $f060, $f060, $f060, $f060, $f0b0, $f0b0
+        dc.w $f0b0, $f0b0, $f0b0, $f100, $f100, $f150, $f150, $f150
+        dc.w $f1a0, $f1a0, $f1f0, $f1f0, $f240, $f240, $f290, $f2e0
+        dc.w $f2e0, $f330, $f380, $f3d0, $f3d0, $f420, $f470, $f4c0
+        dc.w $f510, $f560, $f560, $f5b0, $f600, $f650, $f6a0, $f6f0
+        dc.w $f740, $f790, $f7e0, $f830, $f880, $f920, $f970, $f9c0
+        dc.w $fa10, $fa60, $fab0, $fb00, $fb50, $fbf0, $fc40, $fc90
+        dc.w $fce0, $fd30, $fdd0, $fe20, $fe70, $fec0, $ff60, $ffb0
