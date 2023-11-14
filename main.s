@@ -29,7 +29,6 @@
         xref VRAI_REglagla04_data
         xref VRAI_REglagla04_sequence
 
-        xref fx_picstretch_animation
         xref fx_wave_animation
 
 MUSIC_TEMPO=40                  ; 75 bpm

@@ -1,13 +1,5 @@
 ;;; Picture stretching effect
-        xdef fx_picstretch_animation
         xdef fx_wave_animation
-        xdef get_current_image_address
-        xdef picdisplay_stretched_4colors
-        xdef wait_next_hz200
-        xdef fx_next_frame
-        xdef fx_loop
-        xdef process_controller
-        xdef process_meta
 
         xref get_hz_200
         xref set_palette
@@ -27,56 +19,25 @@ ANIMATION_HZ200_PERIOD=25       ; 1 image every 25 hz200 i.e 8 FPS
 ;;; a6 - animation sequence
 fx_wave_animation:
         movem.l d0-d7/a0-a6,-(sp)
-        ;; Initialize fx structures before calling main fx loop
-
-        ;; Allocate 10 longs for fx structure
-        ;; It encapsulates very other structure
-        sub.w   #40,sp          ; sp
-        move.l  sp,a0           ; a0 points to the fx structure
-
-        ;; Allocate 4 longs for animation structure
-        sub.w   #16,sp
-        move.l  sp,a1           ; a1 points to the animation structure
-        ;; Initialize animation structure
-        jsr     get_hz_200
-        add.w   #ANIMATION_HZ200_PERIOD,d0
-        move.l  d0,0(a1)
-        move.l  #0,4(a1)
-        move.l  a6,8(a1)
-        move.l  a5,12(a1)
-        ;; Store animation structrure address into fx structure
-        move.l  a1,(a0)
-
-        ;; Initialize picture structure
-        move.l  a4,fx_data_1_phy_screen
-        move.l  #fx_data_1_picture_structure,4(a0)
-        ;; Initialize pic_offset controller
-        move.l  #fx_data_1_pic_offset_controller,8(a0)
-        ;; Allocate pic_offset meta controller
-        move.l  #fx_data_1_pic_offset_meta,24(a0)
-        ;; Allocate pic_ratio controller
-        move.l  #fx_data_1_pic_ratio_controller,12(a0)
-        ;; Allocate pic_ratio meta controller
-        move.l  #fx_data_1_pic_ratio_meta,28(a0)
-        ;; Allocate wave_offset controller
-        move.l  #fx_data_1_wave_offset_controller,16(a0)
-        ;; Allocate wave_offset meta controller
-        move.l  #fx_data_1_wave_offset_meta,32(a0)
-        ;; Allocate wave_ratio controller
-        move.l  #fx_data_1_wave_ratio_controller,20(a0)
-        ;; Allocate wave_ratio meta controller
-        move.l  #fx_data_1_wave_ratio_meta,36(a0)
 
         ;; set palette
         move.l  (a5),a3
         jsr     set_palette
+
+        ;; Initialize fx structures before calling main fx loop
+        move.l  #fx_data_1_fx_structure,a0
+        jsr     get_hz_200
+        add.w   #ANIMATION_HZ200_PERIOD,d0
+        move.l  d0,40(a0)
+        move.l  a6,48(a0)
+        move.l  a5,52(a0)
+        move.l  a4,72(a0)
 
         ;; Move to main fx_loop
         move.l  a0,a6
         jsr fx_loop             ; with fx structure in a6
 
         ;; release allocated structures
-        add.w   #(40+16),sp
         movem.l (sp)+,d0-d7/a0-a6
         rts
 
@@ -184,7 +145,6 @@ process_meta:
         .end:
         movem.l (sp)+,d0-d7/a0-a6
         rts
-
 
 ;;; Parameters:
 ;;; a6 - address of controller structure (22 bytes = 7*2+2*4)
@@ -387,12 +347,30 @@ picdisplay_stretched_4colors:
 
         section data
 
+fx_data_1_fx_structure:
+        dc.l    fx_data_1_animation_structure
+        dc.l    fx_data_1_picture_structure
+        dc.l    fx_data_1_pic_offset_controller
+        dc.l    fx_data_1_pic_ratio_controller
+        dc.l    fx_data_1_wave_offset_controller
+        dc.l    fx_data_1_wave_ratio_controller
+        dc.l    fx_data_1_pic_offset_meta
+        dc.l    fx_data_1_pic_ratio_meta
+        dc.l    fx_data_1_wave_offset_meta
+        dc.l    fx_data_1_wave_ratio_meta
+
+fx_data_1_animation_structure:
+        dc.l    0 ; time of next animation image - offste +40
+        dc.l    0 ; index of current image in sequence table
+        dc.l    0 ; address of images sequence table - offset +48
+        dc.l    0 ; address of images pointers - offset +52
+
 fx_data_1_picture_structure:
 fx_data_1_pic_offset:   dc.l    0       ; pic_offset
 fx_data_1_wave_offset:  dc.l    0       ; wave_offset
 fx_data_1_pic_ratio:    dc.l    90      ; pic_X - pic_ratio
 fx_data_1_wave_ratio    dc.l    1       ; wav_X - wave_ratio
-fx_data_1_phy_screen:   dc.l    0       ; physical screen address
+fx_data_1_phy_screen:   dc.l    0       ; physical screen address - offset +72
         dc.l    0             ; address of picture to display
         dc.l    wave_table    ; wave table address
         dc.l    100           ; pic_Y
