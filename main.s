@@ -30,6 +30,8 @@
         xref VRAI_REglagla04_sequence
 
         xref fx_wave_animation
+        xref fx_data_1_fx_structure
+        xref fx_data_2_fx_structure
 
 MUSIC_TEMPO=40                  ; 75 bpm
 
@@ -156,7 +158,8 @@ main:
         move.l  #no_text,d3
         lea.l   VraiREglagla01_data,a5
         lea.l   VraiREglagla01_sequence,a6
-;        jsr     animation
+                                ;        jsr     animation
+        lea.l   fx_data_1_fx_structure,a3
         jsr     fx_wave_animation
         jsr     wait_next_pattern
 
@@ -174,6 +177,7 @@ main:
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
 ;        jsr     animation
+        lea.l   fx_data_2_fx_structure,a3
         jsr     fx_wave_animation
         jsr     wait_next_pattern
 
@@ -189,6 +193,7 @@ main:
         lea.l   VRAIglagla33_data,a5
         lea.l   VRAIglagla33_sequence,a6
 ;        jsr     animation
+        lea.l   fx_data_1_fx_structure,a3
         jsr     fx_wave_animation
         jsr     wait_next_pattern
 
@@ -204,6 +209,7 @@ main:
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
 ;        jsr     animation
+        lea.l   fx_data_2_fx_structure,a3
         jsr     fx_wave_animation
         jsr     wait_next_pattern
 

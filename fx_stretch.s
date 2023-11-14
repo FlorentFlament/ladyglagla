@@ -1,5 +1,7 @@
 ;;; Picture stretching effect
         xdef fx_wave_animation
+        xdef fx_data_1_fx_structure
+        xdef fx_data_2_fx_structure
 
         xref get_hz_200
         xref set_palette
@@ -14,6 +16,7 @@ FX_HZ200_PERIOD=5
 ANIMATION_HZ200_PERIOD=25       ; 1 image every 25 hz200 i.e 8 FPS
 
 ;;; Parameters:
+;;; a3 - fx_structure address
 ;;; a4 - physical screen base address
 ;;; a5 - animation address
 ;;; a6 - animation sequence
@@ -21,11 +24,11 @@ fx_wave_animation:
         movem.l d0-d7/a0-a6,-(sp)
 
         ;; set palette
+        move.l  a3,a0
         move.l  (a5),a3
         jsr     set_palette
 
         ;; Initialize fx structures before calling main fx loop
-        move.l  #fx_data_1_fx_structure,a0
         jsr     get_hz_200
         add.w   #ANIMATION_HZ200_PERIOD,d0
         move.l  d0,40(a0)
@@ -440,6 +443,101 @@ fx_data_1_wave_ratio_meta
         dc.w    0             ; 0/1 inactive/active
         dc.l    wave_ratio_sequence     ; sequence table
         dc.l    fx_data_1_wave_ratio_X  ; Address of parameter to control
+
+
+fx_data_2_fx_structure:
+        dc.l    fx_data_2_animation_structure
+        dc.l    fx_data_2_picture_structure
+        dc.l    fx_data_2_pic_offset_controller
+        dc.l    fx_data_2_pic_ratio_controller
+        dc.l    fx_data_2_wave_offset_controller
+        dc.l    fx_data_2_wave_ratio_controller
+        dc.l    fx_data_2_pic_offset_meta
+        dc.l    fx_data_2_pic_ratio_meta
+        dc.l    fx_data_2_wave_offset_meta
+        dc.l    fx_data_2_wave_ratio_meta
+
+fx_data_2_animation_structure:
+        dc.l    0 ; time of next animation image - offste +40
+        dc.l    0 ; index of current image in sequence table
+        dc.l    0 ; address of images sequence table - offset +48
+        dc.l    0 ; address of images pointers - offset +52
+
+fx_data_2_picture_structure:
+fx_data_2_pic_offset:   dc.l    0       ; pic_offset
+fx_data_2_wave_offset:  dc.l    0       ; wave_offset
+fx_data_2_pic_ratio:    dc.l    90      ; pic_X - pic_ratio
+fx_data_2_wave_ratio    dc.l    1       ; wav_X - wave_ratio
+fx_data_2_phy_screen:   dc.l    0       ; physical screen address - offset +72
+        dc.l    0             ; address of picture to display
+        dc.l    wave_table    ; wave table address
+        dc.l    100           ; pic_Y
+        dc.l    100           ; wav_Y
+
+fx_data_2_pic_offset_controller:
+        dc.w    0             ; (0,1,2) inactive/linear/table
+        dc.w    2             ; Linear step / 2 when word Table
+        dc.w    0             ; Current value / Table index
+        dc.w    2*256         ; linear/table_index modulus
+fx_data_2_pic_offset_X: dc.w    100     ; X - of X/Y speed factor
+        dc.w    100           ; Y - of X/Y speed factor
+        dc.w    0             ; Z - of speed factor
+        dc.l    fx_data_2_pic_offset    ; Address of parameter to control
+        dc.l    pic_offset_table        ; Table address (if any)
+
+fx_data_2_pic_offset_meta:
+        ;; pic_offset meta contoller
+        dc.w    0             ; 0/1 inactive/active
+        dc.l    pic_offset_sequence     ; sequence table
+        dc.l    fx_data_2_pic_offset_X  ; parameter to control
+
+fx_data_2_pic_ratio_controller:
+        dc.w    2             ; (0,1,2) inactive/linear/table
+        dc.w    2*1           ; Linear step / 2 when word Table
+        dc.w    0             ; Current value / Table index
+        dc.w    2*256         ; linear/table_index modulus
+fx_data_2_pic_ratio_X:  dc.w    100     ; X - of X/Y speed factor
+        dc.w    100           ; Y - of X/Y speed factor
+        dc.w    0             ; Z - of speed factor
+        dc.l    fx_data_2_pic_ratio     ; Address of parameter to control
+        dc.l    pic_ratio_table         ; Table address (if any)
+
+fx_data_2_pic_ratio_meta:
+        dc.w    1             ; 0/1 inactive/active
+        dc.l    pic_ratio_sequence      ; sequence table
+        dc.l    fx_data_2_pic_ratio_X   ; parameter to control
+
+fx_data_2_wave_offset_controller:
+        dc.w    0             ; (0,1,2) inactive/linear/table
+        dc.w    2*8           ; Linear step / 2 when word Table
+        dc.w    0             ; Current value / Table index
+        dc.w    2*256         ; linear/table_index modulus
+fx_data_2_wave_offset_X: dc.w   100     ; X - of X/Y speed factor
+        dc.w    100           ; Y - of X/Y speed factor
+        dc.w    0             ; Z - of speed factor
+        dc.l    fx_data_2_wave_offset ; Address of parameter to control
+        dc.l    0             ; Table address (if any)
+
+fx_data_2_wave_offset_meta:
+        dc.w    0             ; 0/1 inactive/active
+        dc.l    wave_offset_sequence    ; sequence table
+        dc.l    fx_data_2_wave_offset_X ; Address of parameter to control
+
+fx_data_2_wave_ratio_controller:
+        dc.w    0             ; (0,1,2) inactive/linear/table
+        dc.w    2*1           ; Linear step / 2 when word Table
+        dc.w    0             ; Current value / Table index
+        dc.w    2*256         ; linear/table_index modulus
+fx_data_2_wave_ratio_X: dc.w    100     ; X - of X/Y speed factor
+        dc.w    100           ; Y - of X/Y speed factor
+        dc.w    0             ; Z - of speed factor
+        dc.l    fx_data_2_wave_ratio    ; Address of parameter to control
+        dc.l    wave_ratio_table        ; Table address (if any)
+
+fx_data_2_wave_ratio_meta
+        dc.w    0             ; 0/1 inactive/active
+        dc.l    wave_ratio_sequence     ; sequence table
+        dc.l    fx_data_2_wave_ratio_X  ; Address of parameter to control
 
 
 wave_table:
