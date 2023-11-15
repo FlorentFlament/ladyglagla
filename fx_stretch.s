@@ -1,5 +1,6 @@
 ;;; Picture stretching effect
         xdef fx_wave_animation
+        xdef fx_next_frame
         xdef fx_data_1_fx_structure
         xdef fx_data_2_fx_structure
 
@@ -393,7 +394,7 @@ fx_data_1_pic_offset_X: dc.w    100     ; X - of X/Y speed factor
 fx_data_1_pic_offset_meta:
         ;; pic_offset meta contoller
         dc.w    0             ; 0/1 inactive/active
-        dc.l    pic_offset_sequence     ; sequence table
+        dc.l    0             ; sequence table
         dc.l    fx_data_1_pic_offset_X  ; parameter to control
 
 fx_data_1_pic_ratio_controller:
@@ -409,7 +410,7 @@ fx_data_1_pic_ratio_X:  dc.w    100     ; X - of X/Y speed factor
 
 fx_data_1_pic_ratio_meta:
         dc.w    1             ; 0/1 inactive/active
-        dc.l    pic_ratio_sequence      ; sequence table
+        dc.l    fx_1_pic_ratio_sequence ; sequence table
         dc.l    fx_data_1_pic_ratio_X   ; parameter to control
 
 fx_data_1_wave_offset_controller:
@@ -425,7 +426,7 @@ fx_data_1_wave_offset_X: dc.w   100     ; X - of X/Y speed factor
 
 fx_data_1_wave_offset_meta:
         dc.w    0             ; 0/1 inactive/active
-        dc.l    wave_offset_sequence    ; sequence table
+        dc.l    0             ; sequence table
         dc.l    fx_data_1_wave_offset_X ; Address of parameter to control
 
 fx_data_1_wave_ratio_controller:
@@ -441,7 +442,7 @@ fx_data_1_wave_ratio_X: dc.w    100     ; X - of X/Y speed factor
 
 fx_data_1_wave_ratio_meta
         dc.w    0             ; 0/1 inactive/active
-        dc.l    wave_ratio_sequence     ; sequence table
+        dc.l    0             ; sequence table
         dc.l    fx_data_1_wave_ratio_X  ; Address of parameter to control
 
 
@@ -488,11 +489,11 @@ fx_data_2_pic_offset_X: dc.w    100     ; X - of X/Y speed factor
 fx_data_2_pic_offset_meta:
         ;; pic_offset meta contoller
         dc.w    0             ; 0/1 inactive/active
-        dc.l    pic_offset_sequence     ; sequence table
+        dc.l    0             ; sequence table
         dc.l    fx_data_2_pic_offset_X  ; parameter to control
 
 fx_data_2_pic_ratio_controller:
-        dc.w    2             ; (0,1,2) inactive/linear/table
+        dc.w    0             ; (0,1,2) inactive/linear/table
         dc.w    2*1           ; Linear step / 2 when word Table
         dc.w    0             ; Current value / Table index
         dc.w    2*256         ; linear/table_index modulus
@@ -503,24 +504,24 @@ fx_data_2_pic_ratio_X:  dc.w    100     ; X - of X/Y speed factor
         dc.l    pic_ratio_table         ; Table address (if any)
 
 fx_data_2_pic_ratio_meta:
-        dc.w    1             ; 0/1 inactive/active
-        dc.l    pic_ratio_sequence      ; sequence table
+        dc.w    0             ; 0/1 inactive/active
+        dc.l    0             ; sequence table
         dc.l    fx_data_2_pic_ratio_X   ; parameter to control
 
 fx_data_2_wave_offset_controller:
-        dc.w    0             ; (0,1,2) inactive/linear/table
-        dc.w    2*8           ; Linear step / 2 when word Table
+        dc.w    1             ; (0,1,2) inactive/linear/table
+        dc.w    2*1           ; Linear step / 2 when word Table
         dc.w    0             ; Current value / Table index
         dc.w    2*256         ; linear/table_index modulus
-fx_data_2_wave_offset_X: dc.w   100     ; X - of X/Y speed factor
+fx_data_2_wave_offset_X: dc.w   800     ; X - of X/Y speed factor
         dc.w    100           ; Y - of X/Y speed factor
         dc.w    0             ; Z - of speed factor
         dc.l    fx_data_2_wave_offset ; Address of parameter to control
         dc.l    0             ; Table address (if any)
 
 fx_data_2_wave_offset_meta:
-        dc.w    0             ; 0/1 inactive/active
-        dc.l    wave_offset_sequence    ; sequence table
+        dc.w    1             ; 0/1 inactive/active
+        dc.l    fx_2_wave_offset_sequence ; sequence table
         dc.l    fx_data_2_wave_offset_X ; Address of parameter to control
 
 fx_data_2_wave_ratio_controller:
@@ -528,16 +529,16 @@ fx_data_2_wave_ratio_controller:
         dc.w    2*1           ; Linear step / 2 when word Table
         dc.w    0             ; Current value / Table index
         dc.w    2*256         ; linear/table_index modulus
-fx_data_2_wave_ratio_X: dc.w    100     ; X - of X/Y speed factor
+fx_data_2_wave_ratio_X: dc.w    200     ; X - of X/Y speed factor
         dc.w    100           ; Y - of X/Y speed factor
         dc.w    0             ; Z - of speed factor
         dc.l    fx_data_2_wave_ratio    ; Address of parameter to control
         dc.l    wave_ratio_table        ; Table address (if any)
 
 fx_data_2_wave_ratio_meta
-        dc.w    0             ; 0/1 inactive/active
-        dc.l    wave_ratio_sequence     ; sequence table
-        dc.l    fx_data_2_wave_ratio_X  ; Address of parameter to control
+        dc.w    1             ; 0/1 inactive/active
+        dc.l    fx_2_wave_ratio_sequence ; sequence table
+        dc.l    fx_data_2_wave_ratio+2  ; Address of parameter to control
 
 
 wave_table:
@@ -643,15 +644,32 @@ pic_offset_table:
         dc.w $fa10, $fa60, $fab0, $fb00, $fb50, $fbf0, $fc40, $fc90
         dc.w $fce0, $fd30, $fdd0, $fe20, $fe70, $fec0, $ff60, $ffb0
 
-pic_offset_sequence:
-pic_ratio_sequence:
-wave_offset_sequence:
-wave_ratio_sequence:
-        dc.w $0000, $0000, $0000, $0000, $0000, $0000, $000a, $0014
-        dc.w $001e, $0028, $0032, $003c, $0046, $0050, $005a, $0064
-        dc.w $0064, $0064, $0064, $0064, $0064, $0064, $0064, $0064
-        dc.w $0064, $0064, $0064, $0064, $0064, $0064, $0064, $0064
-        dc.w $0064, $0064, $0064, $0064, $008c, $00b4, $00dc, $0104
-        dc.w $012c, $0154, $017c, $01a4, $01cc, $01f4, $01f4, $01f4
-        dc.w $01f4, $01f4, $01f4, $01f4, $01f4, $01f4, $01f4, $01f4
-        dc.w $01f4, $01f4, $01f4, $01f4, $01f4, $01f4, $01f4, $01f4
+fx_1_pic_ratio_sequence:
+	dc.w $0000, $0008, $0010, $0018, $0020, $0028, $0030, $0038
+	dc.w $0040, $0048, $0050, $0058, $0060, $0068, $0070, $0078
+	dc.w $0080, $0088, $0090, $0098, $00a0, $00a8, $00b0, $00b8
+	dc.w $00c0, $00c8, $00d0, $00d8, $00e0, $00e8, $00f0, $00f8
+	dc.w $0100, $0108, $0110, $0118, $0120, $0128, $0130, $0138
+	dc.w $0140, $0148, $0150, $0158, $0160, $0168, $0170, $0178
+	dc.w $0180, $0188, $0190, $0198, $01a0, $01a8, $01b0, $01b8
+	dc.w $01c0, $01c8, $01d0, $01d8, $01e0, $01e8, $01f0, $01f4
+
+fx_2_wave_ratio_sequence:
+        dc.w $0000, $0006, $000c, $0012, $0018, $001e, $0024, $002a
+        dc.w $0030, $0036, $003c, $0042, $0048, $004e, $0054, $005a
+        dc.w $0060, $0066, $006c, $0072, $0078, $007e, $0084, $008a
+        dc.w $0090, $0096, $009c, $00a2, $00a8, $00ae, $00b4, $00ba
+        dc.w $00c0, $00c6, $00c8, $00c8, $00c8, $00c8, $00c8, $00c8
+        dc.w $00c8, $00c8, $00c8, $00c8, $00c8, $00c8, $00c8, $00c8
+        dc.w $00c8, $00c8, $00c8, $00c8, $00c8, $00c8, $00c8, $00c8
+        dc.w $00c8, $00c8, $00c8, $00c8, $00c8, $00c8, $00c8, $00c8
+
+fx_2_wave_offset_sequence:
+        dc.w $0000, $0032, $0064, $0096, $00c8, $00fa, $012c, $015e
+        dc.w $0190, $01c2, $01f4, $0226, $0258, $028a, $02bc, $02ee
+        dc.w $0320, $0320, $0320, $0320, $0320, $0320, $0320, $0320
+        dc.w $0320, $0320, $0320, $0320, $0320, $0320, $0320, $0320
+        dc.w $0320, $030a, $02f4, $02de, $02c8, $02b2, $029c, $0286
+        dc.w $0270, $025a, $0244, $022e, $0218, $0202, $01ec, $01d6
+        dc.w $01c0, $01aa, $0194, $017e, $0168, $0152, $013c, $0126
+        dc.w $0110, $00fa, $00e4, $00ce, $00b8, $00a2, $008c, $0076
