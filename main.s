@@ -66,89 +66,89 @@ main:
         move.l  #$00000000,d5
         jsr     picerase_bottomup
 .main_loop:
-;        ;; Ladyglagla introduction
-;        jsr     wait_next_pattern
-;        lea.l   picture_callisto_glafouk,a3
-;        jsr     picdisplay
-;        lea     text_glafouk_1,a0
-;        jsr     textwriter
-;        move.l  #100,d3         ; wait
-;        jsr     wait_hz_200
-;        lea     text_glafouk_2,a0
-;        jsr     textwriter
-;        move.l  #200,d3         ; wait
-;        jsr     wait_hz_200
-;        jsr     wait_next_pattern
-;
-;        move.l  #2390,d6        ; duration of animation - (- (* 15 160) 10)
-;                                ; 15 beats at 160 ticks per beat minus 10 margin
-;        move.l  #$0000ffff,d4   ; 2
-;        move.l  #$00000000,d5
-;        jsr     picerase_leftright
-;        jsr     wait_next_pattern
-;        move.l  #text_glagla_1,d3
-;        lea.l   VraiREglagla01_data,a5
-;        lea.l   VraiREglagla01_sequence,a6
-;        jsr     animation
-;        jsr     wait_next_pattern
-;
-;        move.l  #$ffffffff,d4   ; 3
-;        move.l  #$00000000,d5
-;        jsr     picerase_topdown
-;        jsr     wait_next_pattern
-;        move.l  #text_glagla_2,d3
-;        lea.l   VRAI_REglagla02_data,a5
-;        lea.l   VRAI_REglagla02_sequence,a6
-;        jsr     animation
-;        jsr     wait_next_pattern
-;
-;        move.l  #$0000ffff,d4   ; 2
-;        move.l  #$00000000,d5
-;        jsr     picerase_rightleft
-;        jsr     wait_next_pattern
-;        move.l  #text_glagla_3,d3
-;        lea.l   VRAIglagla33_data,a5
-;        lea.l   VRAIglagla33_sequence,a6
-;        jsr     animation
-;        jsr     wait_next_pattern
-;
-;        move.l  #$ffff0000,d4   ; 1
-;        move.l  #$00000000,d5
-;        jsr     picerase_bottomup
-;        jsr     wait_next_pattern
-;        move.l  #text_glagla_4,d3
-;        lea.l   VRAI_REglagla04_data,a5
-;        lea.l   VRAI_REglagla04_sequence,a6
-;        jsr     animation
-;        jsr     wait_next_pattern
-;
-;        ;; Flush
-;        move.l  #$ffffffff,d4   ; 3
-;        move.l  #$00000000,d5
-;        jsr     picerase_leftright
-;        jsr     wait_next_pattern
-;        lea     picture_logo,a3
-;        jsr     picdisplay
-;        move.l  #500,d3         ; wait
-;        jsr     wait_hz_200
-;        jsr     wait_next_pattern
-;        jsr     picscratch_fx
-;        jsr     wait_next_pattern
-;        lea     text_credits,a0
-;        jsr     textwriter
-;        move.l  #500,d3         ; wait
-;        jsr     wait_hz_200
-;        jsr     wait_next_pattern
-;        jsr     picscratch_fx
-;        move.l  #100,d3         ; wait
-;        jsr     wait_hz_200
-;        jsr     wait_next_pattern
-;
-;;; Second part - with FXs
-;
-;        move.l  #$00000000,d4   ; 4
-;        move.l  #$ffff0000,d5
-;        jsr     picerase_leftright
+        ;; Ladyglagla introduction
+        jsr     wait_next_pattern
+        lea.l   picture_callisto_glafouk,a3
+        jsr     picdisplay
+        lea     text_glafouk_1,a0
+        jsr     textwriter
+        move.l  #100,d3         ; wait
+        jsr     wait_hz_200
+        lea     text_glafouk_2,a0
+        jsr     textwriter
+        move.l  #200,d3         ; wait
+        jsr     wait_hz_200
+        jsr     wait_next_pattern
+
+        move.l  #2390,d6        ; duration of animation - (- (* 15 160) 10)
+                                ; 15 beats at 160 ticks per beat minus 10 margin
+        move.l  #$0000ffff,d4   ; 2
+        move.l  #$00000000,d5
+        jsr     picerase_leftright
+        jsr     wait_next_pattern
+        move.l  #text_glagla_1,d3
+        lea.l   VraiREglagla01_data,a5
+        lea.l   VraiREglagla01_sequence,a6
+        jsr     animation
+        jsr     wait_next_pattern
+
+        move.l  #$ffffffff,d4   ; 3
+        move.l  #$00000000,d5
+        jsr     picerase_topdown
+        jsr     wait_next_pattern
+        move.l  #text_glagla_2,d3
+        lea.l   VRAI_REglagla02_data,a5
+        lea.l   VRAI_REglagla02_sequence,a6
+        jsr     animation
+        jsr     wait_next_pattern
+
+        move.l  #$0000ffff,d4   ; 2
+        move.l  #$00000000,d5
+        jsr     picerase_rightleft
+        jsr     wait_next_pattern
+        move.l  #text_glagla_3,d3
+        lea.l   VRAIglagla33_data,a5
+        lea.l   VRAIglagla33_sequence,a6
+        jsr     animation
+        jsr     wait_next_pattern
+
+        move.l  #$ffff0000,d4   ; 1
+        move.l  #$00000000,d5
+        jsr     picerase_bottomup
+        jsr     wait_next_pattern
+        move.l  #text_glagla_4,d3
+        lea.l   VRAI_REglagla04_data,a5
+        lea.l   VRAI_REglagla04_sequence,a6
+        jsr     animation
+        jsr     wait_next_pattern
+
+        ;; Flush
+        move.l  #$ffffffff,d4   ; 3
+        move.l  #$00000000,d5
+        jsr     picerase_leftright
+        jsr     wait_next_pattern
+        lea     picture_logo,a3
+        jsr     picdisplay
+        move.l  #500,d3         ; wait
+        jsr     wait_hz_200
+        jsr     wait_next_pattern
+        jsr     picscratch_fx
+        jsr     wait_next_pattern
+        lea     text_credits,a0
+        jsr     textwriter
+        move.l  #500,d3         ; wait
+        jsr     wait_hz_200
+        jsr     wait_next_pattern
+        jsr     picscratch_fx
+        move.l  #100,d3         ; wait
+        jsr     wait_hz_200
+        jsr     wait_next_pattern
+
+;; Second part - with FXs
+
+        move.l  #$00000000,d4   ; 4
+        move.l  #$ffff0000,d5
+        jsr     picerase_leftright
         jsr     wait_next_pattern
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
@@ -176,7 +176,6 @@ main:
         move.l  #no_text,d3
         lea.l   VRAI_REglagla02_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
-;        jsr     animation
         lea.l   fx_data_2_fx_structure,a3
         jsr     fx_wave_animation
         jsr     wait_next_pattern
@@ -192,8 +191,7 @@ main:
         move.l  #no_text,d3
         lea.l   VRAIglagla33_data,a5
         lea.l   VRAIglagla33_sequence,a6
-;        jsr     animation
-        lea.l   fx_data_1_fx_structure,a3
+        lea.l   fx_data_3_fx_structure,a3
         jsr     fx_wave_animation
         jsr     wait_next_pattern
 
@@ -208,8 +206,7 @@ main:
         move.l  #no_text,d3
         lea.l   VRAI_REglagla04_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
-;        jsr     animation
-        lea.l   fx_data_2_fx_structure,a3
+        lea.l   fx_data_4_fx_structure,a3
         jsr     fx_wave_animation
         jsr     wait_next_pattern
 

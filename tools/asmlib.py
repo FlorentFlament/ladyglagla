@@ -5,7 +5,7 @@ def render(data, perline=8, unit='dc.w'):
         if i%perline == 0:
             if i != 0:
                 res.append('\n')
-            res.append(f'\t{unit} ')
+            res.append(' '*8 + f'{unit} ')
         else:
             res.append(', ')
         if (unit == 'dc.b'):
