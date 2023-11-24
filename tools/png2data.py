@@ -33,8 +33,16 @@ def get_st_palette(rgb_palette):
 
 def pretty_name(filepath):
     name = "_".join(os.path.basename(filepath).split(sep=".")[:-1])
-    name.replace("-", "_")
-    return name
+    return name.replace("-", "_")
+
+def diff(pic1, pic2, bitplanes=2):
+    rv = []
+    for i in range(0,len(pic1),bitplanes):
+        b1 = pic1[i:i+bitplanes]
+        b2 = pic2[i:i+bitplanes]
+        if b1 != b2:
+            rv.append((i, b1, b2))
+    return rv
 
 def main():
     parser = argparse.ArgumentParser(
@@ -42,18 +50,31 @@ def main():
         description='Converts a PNG image into Atari ST assembly data')
     parser.add_argument('filename')
     parser.add_argument('-b', '--bitplanes', help='bitplanes count', type=int, choices=range(1,5), default=4)
+    parser.add_argument('-d', '--diff', help='images difference', type=str, default=None)
 
     args = parser.parse_args()
     im = Image.open(args.filename)
     data = list(im.getdata())
     st_pic = process_image(data, args.bitplanes)
 
-    name = pretty_name(args.filename)
-    print()
-    print(f"{name}:")
-    print(f"{name}_palette:")
-    print(render(get_st_palette(im.getpalette()[:48])))
-    print(f"{name}_data:")
-    print(render(st_pic))
+    if not args.diff:
+        name = pretty_name(args.filename)
+        print()
+        print(f"{name}:")
+        print(f"{name}_palette:")
+        print(render(get_st_palette(im.getpalette()[:48])))
+        print(f"{name}_data:")
+        print(render(st_pic))
+    else:
+        im = Image.open(args.diff)
+        data = list(im.getdata())
+        st_pic2 = process_image(data, args.bitplanes)
+        rv = []
+        for i,_,b2 in diff(st_pic, st_pic2, args.bitplanes):
+            w1,w2 = b2
+            rv.extend((i<<1, w1, w2))
+        name = pretty_name(args.diff)
+        print(f"{name}_diff:")
+        print(render(rv))
 
 main()

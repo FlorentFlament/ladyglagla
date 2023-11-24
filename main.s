@@ -2,6 +2,22 @@
         xdef beat_cnt
         xdef main
 
+        ;; pictures data
+        xref picture_callisto_glafouk
+        xref picture_logo
+        xref callisto_ladyglagla_320x200
+        xref glagla07
+
+        ;; animations data
+        xref VraiREglagla01_data
+        xref VraiREglagla01_sequence
+        xref VRAI_REglagla02_data
+        xref VRAI_REglagla02_sequence
+        xref VRAIglagla33_data
+        xref VRAIglagla33_sequence
+        xref VRAI_REglagla04_data
+        xref VRAI_REglagla04_sequence
+
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
@@ -13,21 +29,11 @@
         xref picerase_topdown
         xref picerase_leftright
         xref picerase_rightleft
-        xref picture_callisto_glafouk
-        xref picture_logo
         xref textwriter
         xref wait_hz_200
         xref wait_next_pattern
 
         xref animation
-        xref VraiREglagla01_data
-        xref VraiREglagla01_sequence
-        xref VRAI_REglagla02_data
-        xref VRAI_REglagla02_sequence
-        xref VRAIglagla33_data
-        xref VRAIglagla33_sequence
-        xref VRAI_REglagla04_data
-        xref VRAI_REglagla04_sequence
 
         xref fx_wave_animation
         xref fx_data_1_fx_structure
@@ -69,6 +75,8 @@ main:
         ;; Ladyglagla introduction
         jsr     wait_next_pattern
         lea.l   picture_callisto_glafouk,a3
+        ;; lea.l   glagla07,a3
+        ;; lea.l   callisto_ladyglagla_320x200,a3
         jsr     picdisplay
         lea     text_glafouk_1,a0
         jsr     textwriter
@@ -85,9 +93,12 @@ main:
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_leftright
+        lea.l   VraiREglagla01_data,a5
+        lea.l   animation_data,a6
+        jsr     uncompress_animation
         jsr     wait_next_pattern
         move.l  #text_glagla_1,d3
-        lea.l   VraiREglagla01_data,a5
+        lea.l   animation_data,a5
         lea.l   VraiREglagla01_sequence,a6
         jsr     animation
         jsr     wait_next_pattern
@@ -95,9 +106,12 @@ main:
         move.l  #$ffffffff,d4   ; 3
         move.l  #$00000000,d5
         jsr     picerase_topdown
+        lea.l   VRAI_REglagla02_data,a5
+        lea.l   animation_data,a6
+        jsr     uncompress_animation
         jsr     wait_next_pattern
         move.l  #text_glagla_2,d3
-        lea.l   VRAI_REglagla02_data,a5
+        lea.l   animation_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         jsr     animation
         jsr     wait_next_pattern
@@ -105,9 +119,12 @@ main:
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_rightleft
+        lea.l   VRAIglagla33_data,a5
+        lea.l   animation_data,a6
+        jsr     uncompress_animation
         jsr     wait_next_pattern
         move.l  #text_glagla_3,d3
-        lea.l   VRAIglagla33_data,a5
+        lea.l   animation_data,a5
         lea.l   VRAIglagla33_sequence,a6
         jsr     animation
         jsr     wait_next_pattern
@@ -115,9 +132,12 @@ main:
         move.l  #$ffff0000,d4   ; 1
         move.l  #$00000000,d5
         jsr     picerase_bottomup
+        lea.l   VRAI_REglagla04_data,a5
+        lea.l   animation_data,a6
+        jsr     uncompress_animation
         jsr     wait_next_pattern
         move.l  #text_glagla_4,d3
-        lea.l   VRAI_REglagla04_data,a5
+        lea.l   animation_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
         jsr     wait_next_pattern
@@ -153,12 +173,14 @@ main:
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_topdown
+        lea.l   VraiREglagla01_data,a5
+        lea.l   animation_data,a6
+        jsr     uncompress_animation
         jsr     wait_next_pattern
         move.l  #790,d6        ; duration of animation - (* 5 160)
         move.l  #no_text,d3
-        lea.l   VraiREglagla01_data,a5
+        lea.l   animation_data,a5
         lea.l   VraiREglagla01_sequence,a6
-                                ;        jsr     animation
         lea.l   fx_data_1_fx_structure,a3
         jsr     fx_wave_animation
         jsr     wait_next_pattern
@@ -172,9 +194,12 @@ main:
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_bottomup
+        lea.l   VRAI_REglagla02_data,a5
+        lea.l   animation_data,a6
+        jsr     uncompress_animation
         jsr     wait_next_pattern
         move.l  #no_text,d3
-        lea.l   VRAI_REglagla02_data,a5
+        lea.l   animation_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         lea.l   fx_data_2_fx_structure,a3
         jsr     fx_wave_animation
@@ -187,9 +212,12 @@ main:
         move.l  #$ffffffff,d4   ; 3
         move.l  #$00000000,d5
         jsr     picerase_leftright
+        lea.l   VRAIglagla33_data,a5
+        lea.l   animation_data,a6
+        jsr     uncompress_animation
         jsr     wait_next_pattern
         move.l  #no_text,d3
-        lea.l   VRAIglagla33_data,a5
+        lea.l   animation_data,a5
         lea.l   VRAIglagla33_sequence,a6
         lea.l   fx_data_3_fx_structure,a3
         jsr     fx_wave_animation
@@ -202,9 +230,12 @@ main:
         move.l  #$ffff0000,d4   ; 1
         move.l  #$00000000,d5
         jsr     picerase_rightleft
+        lea.l   VRAI_REglagla04_data,a5
+        lea.l   animation_data,a6
+        jsr     uncompress_animation
         jsr     wait_next_pattern
         move.l  #no_text,d3
-        lea.l   VRAI_REglagla04_data,a5
+        lea.l   animation_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         lea.l   fx_data_4_fx_structure,a3
         jsr     fx_wave_animation
@@ -308,6 +339,20 @@ text_credits:
         dc.b    $1b,'Y',' '+14,' '+14,"Code: Flewww"
         dc.b    0
 
+animation_data:
+	dc.l	0               ; to be updated at runtime
+	dc.l	0
+	dc.l	animation_pic2 
+	dc.l	animation_pic3 
+	dc.l	animation_pic4 
+	dc.l	animation_pic5 
+
         section bss
-tempo_cnt:      dcb.w 1
-beat_cnt:       dcb.w 1
+tempo_cnt:              dcb.w   1
+beat_cnt:               dcb.w   1
+
+;;; animation buffer
+animation_pic2:         dcb.b   80*200
+animation_pic3:         dcb.b   80*200
+animation_pic4:         dcb.b   80*200
+animation_pic5:         dcb.b   80*200

@@ -8,8 +8,8 @@
         xdef picerase_leftright
         xdef picerase_rightleft
         xdef set_palette
-        xdef xor_background
         xdef movepic_4colors
+        xdef memcopy_16k
 
 ;;; Display pictures by blocks to make them appear slowly
 ;;; 160 bytes per line
@@ -191,6 +191,7 @@ movepic_16colors:
         movem.l (sp)+,d3-d4
         rts
 
+;;; Copy a 4 colors picture from one memory area to a video memory location
 ;;; arguments
 ;;; a3 address of picture
 ;;; a4 address of where picture needs to be writen
@@ -207,3 +208,20 @@ movepic_4colors:
         bpl     .move_loop
         movem.l (sp)+,d3-d4     ; restore registers d3 and d4 used as indexes
         rts
+
+;;; Copy a 16k memory block from one memory area to another.
+;;; arguments:
+;;; a3 address of picture
+;;; a4 address of where picture needs to be writen
+;;; All registers are saved then restored
+memcopy_16k:
+        move.l  d3,-(sp)        ; backup registers d3 and d4 used as indexes
+        ;; Copy picture data to video memory
+        move.l  #16000-4,d3     ; Move every long (4 bytes shift) from picture
+.move_loop:
+        move.l  (a3,d3.w),(a4,d3.w)
+        subq.w  #4,d3
+        bpl     .move_loop
+        move.l  (sp)+,d3        ; restore registers d3 and d4 used as indexes
+        rts
+        

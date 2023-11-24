@@ -1,7 +1,9 @@
         xdef animation
+        xdef uncompress_animation
 
         xref set_palette
         xref movepic_4colors
+        xref memcopy_16k
 
 ;;; a3 address of time_pointers (3x longs)
 ;;; -> d0 contains hz_200
@@ -112,4 +114,42 @@ animation:
         ;; End of animation
         add.l   #12,sp          ; Unallocate the 3 longs in stack
         movem.l (sp)+,a0-a3/d0-d3/d5
+        rts
+
+uncompress_pic:
+        cmp.l   a2,a1
+        bge     .end
+        .loop:
+        move.w  0(a1),d0
+        move.l  2(a1),(a0,d0)
+        add.w   #6,a1
+        cmp.l   a2,a1
+        blt     .loop
+        .end:
+        rts
+
+;;; a5 - address of the animation source
+;;; a6 - address of destination buffer
+uncompress_animation:
+        movem.l d0-d7/a0-a6,-(sp)
+
+        move.l  (a5),(a6)
+        move.l  4(a5),4(a6)
+
+        ;; Copy pic1 to images 2-5
+        move.l  4(a5),a3
+        REPT 4
+        move.l  4*(REPTN+2)(a6),a4
+        jsr     memcopy_16k
+        ENDR
+
+        REPT 4
+        ;; Update diffs
+        move.l  4*(REPTN+2)(a6),a0
+        move.l  4*(REPTN+2)(a5),a1
+        move.l  4*(REPTN+3)(a5),a2
+        jsr     uncompress_pic
+        ENDR
+
+        movem.l (sp)+,d0-d7/a0-a6
         rts

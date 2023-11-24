@@ -1,7 +1,9 @@
 # Todos
 
-- Ensembles de paramètres pour "tableaux"
-- Meta controleurs
+- Compresser les animations (288k) pour pouvoir caser les 2 nouveaux
+  graphes (64k). En stockant uniquement les différences entre les
+  images d'une animation, on devrait gagner beaucoup.
+
 - Ecrans de transition
   1.
   "This demo was not done by ChatGPT"
@@ -10,9 +12,6 @@
   "Just for the fun"
   "of doing useless things"
 - double buffering
-
-# Ideas
-- wave fx along y axis - implementation can move words so should be fast
 
 Nice article about waiting on Atari ST:
 https://bumbershootsoft.wordpress.com/2021/05/29/timing-on-the-atari-st/
