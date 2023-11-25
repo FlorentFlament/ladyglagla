@@ -1,19 +1,13 @@
 # Todos
 
-- Crash de fin plus déterministe
-- Ajouter les textes
-  - Introduction (Flush presents)
-  - Greetings
-  - Mettre à jour les crédits (Scnénario, Animations, textes)
-- Revenir sur l'écran ladyglagla à la fin
 - Harmoniser les transitions (unique volet, unique couleur, puis
   affichage instantané de l'image).
-
-## en fonction du temps
+- Couper le son à la fin
 - Retoucher des effets
+- Mettre à jour les crédits (Scnénario, Animations, textes)
+- Ajouter les Greetings
 - Harmoniser le timing pour les animations avec texte de la première
   partie
-
 
 # Nice to have
 

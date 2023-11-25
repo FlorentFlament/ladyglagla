@@ -14,7 +14,7 @@ VRAI_REglagla02_sequence:
         dc.w 1,2,3,4,5,4,3,2,0  ; use words for simplicity in code
 
 VRAI_REglagla02_0001_palette:
-        dc.w $0577, $0365, $0243, $0021, $0000, $0000, $0000, $0000
+        dc.w $0065, $0054, $0033, $0011, $0000, $0000, $0000, $0000
         dc.w $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
 
 VRAI_REglagla02_0001_data:

@@ -77,6 +77,8 @@ main:
         move.l  #$00000000,d4   ; 5
         move.l  #$00000000,d5
         jsr     picerase_bottomup
+        lea     text_intro,a0
+        jsr     textwriter
         add.w   #8,d7           ; 8 beats for previous part
         jsr     spinlock_beat_count
 
@@ -268,6 +270,15 @@ main:
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_topdown
+        jsr     wait_next_pattern
+        lea.l   glagla07,a3
+        jsr     picdisplay
+        add.w   #16,d7
+        jsr     spinlock_beat_count
+
+        move.l  #$0000ffff,d4   ; 2
+        move.l  #$00000000,d5
+        jsr     picerase_topdown
 
         ;; Restore previous VBL
         pea       restore_vbl
@@ -317,6 +328,14 @@ restore_vbl:
         rts
 
         section text_data,data
+text_intro:
+        dc.b    $1b,'c',' '+0   ; set background color to black
+        dc.b    $1b,'b',' '+15      ; set foreground color to red
+        dc.b    $1b,'Y',' '+9,' '+17,"Flush"
+        dc.b    $1b,'Y',' '+11,' '+16,"presents"
+        dc.b    $1b,'Y',' '+13,' '+12,"an Atari ST demo"
+        dc.b    $1b,'Y',' '+15,' '+1,"at Silly Venture 2023 winter edition"
+        dc.b    0
 text_glafouk_1:
         ;; Beware ! Need to add ' ' to the color to make it work !
         ;; Otherwise, behaviour is TOS dependant !
@@ -359,13 +378,14 @@ text_credits:
         dc.b    $1b,'Y',' '+14,' '+14,"Code: Flewww"
         dc.b    0
 
+        align 2
 animation_data:
-	dc.l	0               ; to be updated at runtime
-	dc.l	0
-	dc.l	animation_pic2
-	dc.l	animation_pic3
-	dc.l	animation_pic4
-	dc.l	animation_pic5
+        dc.l    0               ; to be updated at runtime
+        dc.l    0
+        dc.l    animation_pic2
+        dc.l    animation_pic3
+        dc.l    animation_pic4
+        dc.l    animation_pic5
 
         section bss
 tempo_cnt:              dcb.w   1
