@@ -72,11 +72,19 @@ main:
         move.l  #$00000000,d5
         jsr     picerase_bottomup
 .main_loop:
-        ;; Ladyglagla introduction
+        jsr     wait_next_pattern
+
+        lea.l   glagla07,a3
+        jsr     picdisplay
+        move.l  #2230,d3         ; wait
+        jsr     wait_hz_200
+        jsr     wait_next_pattern
+
+        move.l  #$00000000,d4   ; 5
+        move.l  #$00000000,d5
+        jsr     picerase_bottomup
         jsr     wait_next_pattern
         lea.l   picture_callisto_glafouk,a3
-        ;; lea.l   glagla07,a3
-        ;; lea.l   callisto_ladyglagla_320x200,a3
         jsr     picdisplay
         lea     text_glafouk_1,a0
         jsr     textwriter
@@ -142,25 +150,13 @@ main:
         jsr     animation
         jsr     wait_next_pattern
 
-        ;; Flush
-        move.l  #$ffffffff,d4   ; 3
+        move.l  #$ffff0000,d4   ; 1
         move.l  #$00000000,d5
-        jsr     picerase_leftright
+        jsr     picerase_bottomup
         jsr     wait_next_pattern
-        lea     picture_logo,a3
+        lea.l   callisto_ladyglagla_320x200,a3
         jsr     picdisplay
-        move.l  #500,d3         ; wait
-        jsr     wait_hz_200
-        jsr     wait_next_pattern
-        jsr     picscratch_fx
-        jsr     wait_next_pattern
-        lea     text_credits,a0
-        jsr     textwriter
-        move.l  #500,d3         ; wait
-        jsr     wait_hz_200
-        jsr     wait_next_pattern
-        jsr     picscratch_fx
-        move.l  #100,d3         ; wait
+        move.l  #2230,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
 
@@ -241,9 +237,33 @@ main:
         jsr     fx_wave_animation
         jsr     wait_next_pattern
 
+        ;; Flush
+        move.l  #$ffffffff,d4   ; 3
+        move.l  #$00000000,d5
+        jsr     picerase_leftright
+        jsr     wait_next_pattern
+        lea     picture_logo,a3
+        jsr     picdisplay
+        move.l  #500,d3         ; wait
+        jsr     wait_hz_200
+        jsr     wait_next_pattern
+        jsr     picscratch_fx
+        jsr     wait_next_pattern
+        lea     text_credits,a0
+        jsr     textwriter
+        move.l  #500,d3         ; wait
+        jsr     wait_hz_200
+        jsr     wait_next_pattern
+        jsr     picscratch_fx
+        move.l  #100,d3         ; wait
+        jsr     wait_hz_200
+        jsr     wait_next_pattern
+
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_topdown
+
+        rts                     ; Crash
         bra     .main_loop
 
         ;; Wait for any key press then return
