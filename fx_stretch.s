@@ -33,7 +33,7 @@ fx_wave_animation:
 
         ;; Initialize fx structures before calling main fx loop
         jsr     get_hz_200
-        add.w   #ANIMATION_HZ200_PERIOD,d0
+        add.l   #ANIMATION_HZ200_PERIOD,d0
         move.l  d0,40(a0)
         move.l  a6,48(a0)
         move.l  a5,52(a0)
@@ -343,7 +343,7 @@ picdisplay_stretched_4colors:
 
         add.w   #160,a0         ; next video buffer line (a4)
         add.w   #2,d0
-        cmp.l   #(2*200),d0      ; Loop until end of display areay is reached
+        cmp.w   #(2*200),d0      ; Loop until end of display areay is reached
         blt     .picdisplay_loop
 
         add.w   #(2*220),sp
