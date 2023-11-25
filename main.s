@@ -279,8 +279,9 @@ main:
         dc.w    $A009
 
         movem.l d0-d7/a0-a6,-(sp)
-        clr.w   -(sp)           ; Pterm0
-        trap    #1              ; GEMDOS
+        move.w  0,d0            ; Crash
+        ;; clr.w   -(sp)           ; Pterm0
+        ;; trap    #1              ; GEMDOS
         ;; END
 
 demo_vbl_stuff:
