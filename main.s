@@ -24,6 +24,7 @@
         xref picscratch_fx
 
         xref picdisplay
+        xref picdisplay2
         xref picerase_bottomup
         xref picerase_topdown
         xref picerase_leftright
@@ -83,7 +84,7 @@ main:
         jsr     spinlock_beat_count
 
         lea.l   glagla07,a3
-        jsr     picdisplay
+        jsr     picdisplay2
         add.w   #8,d7
         jsr     spinlock_beat_count
 
@@ -92,7 +93,7 @@ main:
         jsr     picerase_bottomup
         jsr     wait_next_pattern
         lea.l   picture_callisto_glafouk,a3
-        jsr     picdisplay
+        jsr     picdisplay2
         lea     text_glafouk_1,a0
         jsr     textwriter
         move.l  #100,d3         ; wait
@@ -167,19 +168,15 @@ main:
         jsr     picerase_bottomup
         jsr     wait_next_pattern
         lea.l   callisto_ladyglagla_320x200,a3
-        jsr     picdisplay
+        jsr     picdisplay2
         add.w   #8,d7
         jsr     spinlock_beat_count
 
 ;; Second part - with FXs
 
-        move.l  #$00000000,d4   ; 4
-        move.l  #$ffff0000,d5
-        jsr     picerase_leftright
-        jsr     wait_next_pattern
         move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d5
-        jsr     picerase_topdown
+        move.l  #$00000000,d4   ; 4
+        jsr     picerase_leftright
         lea.l   VraiREglagla01_data,a5
         lea.l   animation_data,a6
         jsr     uncompress_animation
@@ -195,10 +192,6 @@ main:
         move.l  #$ffffffff,d4   ; 3
         move.l  #$00000000,d5
         jsr     picerase_rightleft
-        jsr     wait_next_pattern
-        move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d5
-        jsr     picerase_bottomup
         lea.l   VRAI_REglagla02_data,a5
         lea.l   animation_data,a6
         jsr     uncompress_animation
@@ -213,10 +206,6 @@ main:
         move.l  #$ffff0000,d4   ; 1
         move.l  #$00000000,d5
         jsr     picerase_topdown
-        jsr     wait_next_pattern
-        move.l  #$ffffffff,d4   ; 3
-        move.l  #$00000000,d5
-        jsr     picerase_leftright
         lea.l   VRAIglagla33_data,a5
         lea.l   animation_data,a6
         jsr     uncompress_animation
@@ -231,10 +220,6 @@ main:
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_bottomup
-        jsr     wait_next_pattern
-        move.l  #$ffff0000,d4   ; 1
-        move.l  #$00000000,d5
-        jsr     picerase_rightleft
         lea.l   VRAI_REglagla04_data,a5
         lea.l   animation_data,a6
         jsr     uncompress_animation
@@ -252,7 +237,7 @@ main:
         jsr     picerase_leftright
         jsr     wait_next_pattern
         lea     picture_logo,a3
-        jsr     picdisplay
+        jsr     picdisplay2
         move.l  #500,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
@@ -272,7 +257,7 @@ main:
         jsr     picerase_topdown
         jsr     wait_next_pattern
         lea.l   glagla07,a3
-        jsr     picdisplay
+        jsr     picdisplay2
         add.w   #16,d7
         jsr     spinlock_beat_count
 

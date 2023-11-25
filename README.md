@@ -1,7 +1,6 @@
 # Todos
 
-- Harmoniser les transitions (unique volet, unique couleur, puis
-  affichage instantané de l'image).
+- Retravailler les couleurs des volets de transition
 - Couper le son à la fin
 - Retoucher des effets
 - Mettre à jour les crédits (Scnénario, Animations, textes)
