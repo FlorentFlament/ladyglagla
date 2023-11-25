@@ -1,26 +1,35 @@
 # Todos
 
-- Compresser les animations (288k) pour pouvoir caser les 2 nouveaux
-  graphes (64k). En stockant uniquement les différences entre les
-  images d'une animation, on devrait gagner beaucoup.
+- Crash de fin plus déterministe
+- Ajouter les textes
+  - Introduction (Flush presents)
+  - Greetings
+  - Mettre à jour les crédits (Scnénario, Animations, textes)
+- Revenir sur l'écran ladyglagla à la fin
+- Harmoniser les transitions (unique volet, unique couleur, puis
+  affichage instantané de l'image).
 
-- Ecrans de transition
-  1.
-  "This demo was not done by ChatGPT"
-  "Even though we tried very hard.."
-  2.
-  "Just for the fun"
-  "of doing useless things"
+## en fonction du temps
+- Retoucher des effets
+- Harmoniser le timing pour les animations avec texte de la première
+  partie
+
+
+# Nice to have
+
 - double buffering
+
+# Some notes
 
 Nice article about waiting on Atari ST:
 https://bumbershootsoft.wordpress.com/2021/05/29/timing-on-the-atari-st/
 
-https://annuel2.framapad.org/p/flush-demi-stf-a20z?lang=fr
+# Scenario
 
-Scenario
 > 1) Glafouk is playing music by day on a MO5 platini computer
 > 2) "But when night comes he's running Hell as Lady Glagla"  (modifié)
 > 3) He goes to the disco machine to share a drink !
 > 4) But when being back to the appartement he goes to the music keyboard !
 > 5) Long Life Lady GlaGla !
+
+source: https://annuel2.framapad.org/p/flush-demi-stf-a20z?lang=fr

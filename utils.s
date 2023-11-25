@@ -2,6 +2,9 @@
         xdef wait_hz_200
         xdef wait_next_pattern
         xdef spinlock_hz200_simple
+        xdef spinlock_beat_count
+
+        xref beat_cnt
 
 ;;; Wait loop: argument is 200th of second passed in d3
 ;;; register are saved and restored
@@ -48,6 +51,14 @@ wait_next_pattern:
         move.w  tempo_cnt,d0
         bne     .loop
         move.w  (sp)+,d0
+        rts
+
+;;; Argument
+;;; d7 - the absolute beat count to wait for
+spinlock_beat_count:
+        .spin_loop:
+        cmp.w   beat_cnt,d7
+        bgt     .spin_loop
         rts
 
 ;;; d3 - Target time to wait for (absolute in 200th of seconds)

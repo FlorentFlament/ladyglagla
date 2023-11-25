@@ -6,6 +6,7 @@
         xdef fx_data_3_fx_structure
         xdef fx_data_4_fx_structure
 
+        xref beat_cnt
         xref get_hz_200
         xref set_palette
         xref spinlock_hz200_simple
@@ -23,6 +24,7 @@ ANIMATION_HZ200_PERIOD=25       ; 1 image every 25 hz200 i.e 8 FPS
 ;;; a4 - physical screen base address
 ;;; a5 - animation address
 ;;; a6 - animation sequence
+;;; d7 - beat count to wait for
 fx_wave_animation:
         movem.l d0-d7/a0-a6,-(sp)
 
@@ -41,6 +43,7 @@ fx_wave_animation:
 
         ;; Move to main fx_loop
         move.l  a0,a6
+        move.w  d7,d5
         jsr fx_loop             ; with fx structure in a6
 
         ;; release allocated structures
@@ -49,6 +52,7 @@ fx_wave_animation:
 
 ;;; Parameters
 ;;; a6 - fx structure
+;;; d5 - beat count to wait for
 fx_loop:
         movem.l a0-a6/d0-d7,-(sp)
 
@@ -63,10 +67,9 @@ fx_loop:
         ;; Update loop parameters
         jsr     wait_next_hz200   ; d6 contains next hz200 to wait for
         add.l   #FX_HZ200_PERIOD,d6
-
         addq.w  #1,d7
-        cmp.w   #958,d7 ; 40 fps - 32 frames per beat - 30 beats - 24 seconds
-        blt     .loop
+        cmp.w   beat_cnt,d5
+        bgt     .loop
 
         movem.l (sp)+,a0-a6/d0-d7
         rts
@@ -142,7 +145,7 @@ process_meta:
         cmp.w   #0,(a6)
         beq     .end
 
-        lsr     #4,d7 ; 40 FPS /16 -> 2.5 meta keys per second
+        lsr     #3,d7 ; 40 FPS /8 -> 5 meta keys per second
         asl     #1,d7 ; indexing words (multiple of 2)
         move.l  2(a6),a0 ; address of sequence table
         move.l  6(a6),a1 ; address of parameter to control

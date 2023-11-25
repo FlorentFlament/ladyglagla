@@ -1,6 +1,7 @@
         xdef tempo_cnt
         xdef beat_cnt
         xdef main
+        xdef break_here
 
         ;; pictures data
         xref picture_callisto_glafouk
@@ -28,8 +29,10 @@
         xref picerase_leftright
         xref picerase_rightleft
         xref textwriter
+
         xref wait_hz_200
         xref wait_next_pattern
+        xref spinlock_beat_count
 
         xref animation
 
@@ -41,6 +44,8 @@ MUSIC_TEMPO=40                  ; 75 bpm
 
         section code
 main:
+        movem.l d0-d7/a0-a6,-(sp)
+
         ;; Hide mouse with a line A function
         dc.w    $A00A
 
@@ -65,18 +70,20 @@ main:
         addq.l  #2,sp
         move.l  d0,a4           ; Save physical screen ram base in a4
 
+        ;; Initialize beat reference (used to synchronize parts)
+        move.w  #0,d7
+
         ;; picerase_updown pattern
         move.l  #$00000000,d4   ; 5
         move.l  #$00000000,d5
         jsr     picerase_bottomup
-.main_loop:
-        jsr     wait_next_pattern
+        add.w   #8,d7           ; 8 beats for previous part
+        jsr     spinlock_beat_count
 
         lea.l   glagla07,a3
         jsr     picdisplay
-        move.l  #2230,d3         ; wait
-        jsr     wait_hz_200
-        jsr     wait_next_pattern
+        add.w   #8,d7
+        jsr     spinlock_beat_count
 
         move.l  #$00000000,d4   ; 5
         move.l  #$00000000,d5
@@ -90,12 +97,13 @@ main:
         jsr     wait_hz_200
         lea     text_glafouk_2,a0
         jsr     textwriter
-        move.l  #200,d3         ; wait
-        jsr     wait_hz_200
-        jsr     wait_next_pattern
+        add.w   #16,d7
+        jsr     spinlock_beat_count
 
         move.l  #2390,d6        ; duration of animation - (- (* 15 160) 10)
                                 ; 15 beats at 160 ticks per beat minus 10 margin
+                                ; Passed to the `animation` routine
+
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_leftright
@@ -107,7 +115,8 @@ main:
         lea.l   animation_data,a5
         lea.l   VraiREglagla01_sequence,a6
         jsr     animation
-        jsr     wait_next_pattern
+        add.w   #16,d7
+        jsr     spinlock_beat_count
 
         move.l  #$ffffffff,d4   ; 3
         move.l  #$00000000,d5
@@ -120,7 +129,8 @@ main:
         lea.l   animation_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         jsr     animation
-        jsr     wait_next_pattern
+        add.w   #16,d7
+        jsr     spinlock_beat_count
 
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
@@ -133,7 +143,8 @@ main:
         lea.l   animation_data,a5
         lea.l   VRAIglagla33_sequence,a6
         jsr     animation
-        jsr     wait_next_pattern
+        add.w   #16,d7
+        jsr     spinlock_beat_count
 
         move.l  #$ffff0000,d4   ; 1
         move.l  #$00000000,d5
@@ -146,7 +157,8 @@ main:
         lea.l   animation_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         jsr     animation
-        jsr     wait_next_pattern
+        add.w   #16,d7
+        jsr     spinlock_beat_count
 
         move.l  #$ffff0000,d4   ; 1
         move.l  #$00000000,d5
@@ -154,9 +166,8 @@ main:
         jsr     wait_next_pattern
         lea.l   callisto_ladyglagla_320x200,a3
         jsr     picdisplay
-        move.l  #2230,d3         ; wait
-        jsr     wait_hz_200
-        jsr     wait_next_pattern
+        add.w   #8,d7
+        jsr     spinlock_beat_count
 
 ;; Second part - with FXs
 
@@ -176,11 +187,9 @@ main:
         lea.l   animation_data,a5
         lea.l   VraiREglagla01_sequence,a6
         lea.l   fx_data_1_fx_structure,a3
+        add.w   #16,d7          ; fx_wave_animation will end with proper beat
         jsr     fx_wave_animation
-        jsr     wait_next_pattern
 
-        move.l  #2230,d6        ; duration of animation - (- (* 14 160) 10)
-                                ; 14 beats at 160 ticks per beat minus 10 margin
         move.l  #$ffffffff,d4   ; 3
         move.l  #$00000000,d5
         jsr     picerase_rightleft
@@ -196,8 +205,8 @@ main:
         lea.l   animation_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         lea.l   fx_data_2_fx_structure,a3
+        add.w   #16,d7
         jsr     fx_wave_animation
-        jsr     wait_next_pattern
 
         move.l  #$ffff0000,d4   ; 1
         move.l  #$00000000,d5
@@ -214,8 +223,8 @@ main:
         lea.l   animation_data,a5
         lea.l   VRAIglagla33_sequence,a6
         lea.l   fx_data_3_fx_structure,a3
+        add.w   #16,d7
         jsr     fx_wave_animation
-        jsr     wait_next_pattern
 
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
@@ -232,8 +241,8 @@ main:
         lea.l   animation_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         lea.l   fx_data_4_fx_structure,a3
+        add.w   #16,d7
         jsr     fx_wave_animation
-        jsr     wait_next_pattern
 
         ;; Flush
         move.l  #$ffffffff,d4   ; 3
@@ -253,21 +262,12 @@ main:
         jsr     wait_hz_200
         jsr     wait_next_pattern
         jsr     picscratch_fx
-        move.l  #100,d3         ; wait
-        jsr     wait_hz_200
-        jsr     wait_next_pattern
+        add.w   #24,d7           ; 8 beats for previous part
+        jsr     spinlock_beat_count
 
         move.l  #$0000ffff,d4   ; 2
         move.l  #$00000000,d5
         jsr     picerase_topdown
-
-        rts                     ; Crash
-        bra     .main_loop
-
-        ;; Wait for any key press then return
-        move.w  #8,-(sp)        ; Cnecin
-        trap    #1              ; GEMDOS
-        addq.l  #2,sp
 
         ;; Restore previous VBL
         pea       restore_vbl
@@ -278,6 +278,7 @@ main:
         ;; Display mouse with a line A function
         dc.w    $A009
 
+        movem.l d0-d7/a0-a6,-(sp)
         clr.w   -(sp)           ; Pterm0
         trap    #1              ; GEMDOS
         ;; END
@@ -360,10 +361,10 @@ text_credits:
 animation_data:
 	dc.l	0               ; to be updated at runtime
 	dc.l	0
-	dc.l	animation_pic2 
-	dc.l	animation_pic3 
-	dc.l	animation_pic4 
-	dc.l	animation_pic5 
+	dc.l	animation_pic2
+	dc.l	animation_pic3
+	dc.l	animation_pic4
+	dc.l	animation_pic5
 
         section bss
 tempo_cnt:              dcb.w   1
