@@ -21,10 +21,8 @@
         xref PLY_AKYst_Start
         xref music_data
         xref picscratch_fx
-        xref set_palette
 
         xref picdisplay
-        xref picdisplay2
         xref picerase_bottomup
         xref picerase_topdown
         xref picerase_leftright

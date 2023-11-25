@@ -2,7 +2,6 @@
         xref wait_hz_200
 
         xdef picdisplay
-        xdef picdisplay2
         xdef picerase_bottomup
         xdef picerase_topdown
         xdef picerase_leftright
