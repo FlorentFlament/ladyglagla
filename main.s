@@ -1,7 +1,6 @@
         xdef tempo_cnt
         xdef beat_cnt
         xdef main
-        xdef break_here
 
         ;; pictures data
         xref picture_callisto_glafouk
@@ -90,7 +89,7 @@ main:
         jsr     wait_next_pattern
         lea     text_intro_palette,a3
         jsr     set_palette
-        lea     text_intro,a0
+        lea     text_intro,a3
         jsr     textwriter
         add.w   #8,d7           ; 8 beats for previous part
         jsr     spinlock_beat_count
@@ -108,11 +107,11 @@ main:
         jsr     wait_next_pattern
         lea.l   picture_callisto_glafouk,a3
         jsr     picdisplay2
-        lea     text_glafouk_1,a0
+        lea     text_glafouk_1,a3
         jsr     textwriter
         move.l  #100,d3         ; wait
         jsr     wait_hz_200
-        lea     text_glafouk_2,a0
+        lea     text_glafouk_2,a3
         jsr     textwriter
         add.w   #16,d7
         jsr     spinlock_beat_count
@@ -285,16 +284,19 @@ main:
         move.l  #500,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
+        move.w  #5000,d7        ; picscratch_fx parameter
         jsr     picscratch_fx
         jsr     wait_next_pattern
-        lea     text_credits,a0
+        lea     text_credits,a3
         jsr     textwriter
         move.l  #500,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
         jsr     picscratch_fx
-        add.w   #24,d7           ; 8 beats for previous part
-        jsr     spinlock_beat_count
+        jsr     greetz
+        jsr     wait_next_pattern
+        ;; add.w   #24,d7           ; 8 beats for previous part
+        ;; jsr     spinlock_beat_count
 
         move.w  #30,d4
         move.w  #COLOR3,d5
@@ -328,6 +330,22 @@ main:
         clr.w   -(sp)           ; Pterm0
         trap    #1              ; GEMDOS
         ;; END
+
+greetz:
+        movem.l d0-d7/a0-a6,-(sp)
+        move.w  #2000,d7        ; picscratch_fx parameter
+        lea.l   text_greetz,a3
+        .loop:
+        jsr     textwriter
+        jsr     wait_next_pattern
+        jsr     picscratch_fx
+        jsr     wait_next_pattern
+        tst.b   (a3)
+        bne     .loop
+        move.w  #3000,d7        ; picscratch_fx parameter
+        jsr     picscratch_fx
+        movem.l (sp)+,d0-d7/a0-a6
+        rts
 
 demo_vbl_stuff:
         subq.w  #1,tempo_cnt
@@ -413,6 +431,38 @@ text_credits:
         dc.b    $1b,'Y',' '+12,' '+13,"Music: Glafouk"
         dc.b    $1b,'b',' '+9       ; set foreground color to green
         dc.b    $1b,'Y',' '+14,' '+14,"Code: Flewww"
+        dc.b    0
+
+text_greetz:
+        dc.b    $1b,'c',' '+1       ; set background color to black
+        dc.b    $1b,'b',' '+0       ; set foreground color to white
+        dc.b    $1b,'Y',' '+20,' '+17,"Grit'z",0
+        dc.b    $1b,'Y',' '+4,' '+30,"Altair",0
+        dc.b    $1b,'Y',' '+23,' '+11,"Bunch of Craving Kids",0
+        dc.b    $1b,'Y',' '+8,' '+32,"Bomb",0
+        dc.b    $1b,'Y',' '+19,' '+28,"Booze Design",0
+        dc.b    $1b,'Y',' '+6,' '+26,"Cluster",0
+        dc.b    $1b,'Y',' '+21,' '+25,"Cocoon",0
+        dc.b    $1b,'Y',' '+2,' '+20,"Cookie Collective",0
+        dc.b    $1b,'Y',' '+16,' '+27,"Dentifrice",0
+        dc.b    $1b,'Y',' '+12,' '+28,"Dune",0
+        dc.b    $1b,'Y',' '+5,' '+20,"Genesis Project",0
+        dc.b    $1b,'Y',' '+24,' '+28,"g0blinish",0
+        dc.b    $1b,'Y',' '+7,' '+25,"Hooy-Program",0
+        dc.b    $1b,'Y',' '+9,' '+30,"Jac!",0
+        dc.b    $1b,'Y',' '+3,' '+20,"Laboratoire Prout",0
+        dc.b    $1b,'Y',' '+20,' '+26,"Mystic Bytes",0
+        dc.b    $1b,'Y',' '+11,' '+29,"Noice",0
+        dc.b    $1b,'Y',' '+22,' '+27,"Planet Jazz",0
+        dc.b    $1b,'Y',' '+4,' '+29,"Popsy Team",0
+        dc.b    $1b,'Y',' '+14,' '+13,"Royal Belgian Beer Squadron",0
+        dc.b    $1b,'Y',' '+17,' '+27,"Sector One",0
+        dc.b    $1b,'Y',' '+2,' '+30,"Shiru",0
+        dc.b    $1b,'Y',' '+12,' '+25,"Swyng",0
+        dc.b    $1b,'Y',' '+9,' '+20,"The Undead Sceners",0
+        dc.b    $1b,'Y',' '+5,' '+31,"Up Rough",0
+        dc.b    $1b,'Y',' '+18,' '+25,"Vital Motion",0
+        dc.b    $1b,'Y',' '+3,' '+32,"X-men",0
         dc.b    0
 
         align 2

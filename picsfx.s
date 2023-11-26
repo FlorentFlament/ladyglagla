@@ -1,6 +1,8 @@
 ;;; A few pictures FXs
         xdef picscratch_fx
 
+;;; Parameters:
+;;; d7 - number of iterations
 picscratch_fx:
         movem.l d0-d7/a0-a7,-(sp)
 
@@ -10,7 +12,7 @@ picscratch_fx:
         addq.l  #2,sp
         move.l  d0,d6           ; Save physical screen ram base in d6
 
-        move.w  #5000-1,d7      ; Rotate 5000 lines
+        subq.w  #1,d7           ; Rotate d7 lines
         ;; Rotate one line
 .line_loop:
         move.w  #17,-(sp)       ; random

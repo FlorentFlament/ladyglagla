@@ -1,8 +1,6 @@
 # Todos
 
-- Retoucher des effets (surtout le dernier)
 - Mettre à jour les crédits (Scnénario, Animations, textes)
-- Ajouter les Greetings
 - Retravailler la fin
 - Retoucher le texte d'introduction
 - Peaufiner la direction des volets

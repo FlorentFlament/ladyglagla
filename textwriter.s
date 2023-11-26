@@ -1,12 +1,10 @@
         xref wait_hz_200
         xdef textwriter
 
-;;; a0 Address of text to write - will be overwritten
-;;; as d0-d2/a0-d2
-;;; Text to write must end with character \0
+;;; a3 Address of text to write - will be moved just after end of
+;;; string ('\0')
 textwriter:
-        movem.l a3/d3,-(sp)
-        move.l  a0,a3
+        movem.l d0-d3/a0-a2,-(sp)
 
 .loop:
         move.b  (a3),d3
@@ -23,5 +21,6 @@ textwriter:
         bra     .loop
 
 .end:
-        movem.l (sp)+,a3/d3
+        add.l   #1,a3
+        movem.l (sp)+,d0-d3/a0-a2
         rts
