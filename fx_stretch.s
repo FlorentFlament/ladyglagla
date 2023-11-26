@@ -269,7 +269,7 @@ picdisplay_stretched_4colors:
         ;; d1 is picture displacement (initially offset)
 
         ;; Compute picture offset compensated for stretching ratio
-        move.w  #(100+190),d0   ; Also compensate for the headrooms (for wave)
+        move.w  #90,d0   ; Also compensate for the headrooms (for wave)
         sub.w   d3,d0
         asl.w   #4,d0           ; *16
         move.w  d0,d7
@@ -685,9 +685,9 @@ fx_data_4_pic_offset_X: dc.w    100     ; X - of X/Y speed factor
 
 fx_data_4_pic_offset_meta:
         ;; pic_offset meta contoller
-        dc.w    0             ; 0/1 inactive/active
-        dc.l    0             ; sequence table
-        dc.l    fx_data_4_pic_offset_X  ; parameter to control
+        dc.w    1             ; 0/1 inactive/active
+        dc.l    fx_4_pic_offset_sequence             ; sequence table
+        dc.l    fx_data_4_pic_offset+2  ; parameter to control
 
 fx_data_4_pic_ratio_controller:
         dc.w    2             ; (0,1,2) inactive/linear/table
@@ -891,15 +891,25 @@ fx_3_pic_ratio_sequence:
         dc.w $00d0, $00c4, $00b8, $00ac, $00a0, $0094, $0088, $007c
         dc.w $0070, $0064, $0058, $004c, $0040, $0034, $0032, $0032
 
+fx_4_pic_offset_sequence:
+        dc.w $0000, $ffb0, $ff60, $ff10, $fec0, $fe70, $fe20, $fdd0
+        dc.w $fd80, $fd30, $fce0, $fc90, $fc40, $fbf0, $fba0, $fb50
+        dc.w $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00
+        dc.w $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00
+        dc.w $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00
+        dc.w $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00
+        dc.w $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00
+        dc.w $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00, $fb00
+
 fx_4_pic_ratio_sequence:
-        dc.w $0000, $0000, $0000, $0000, $0000, $0032, $0032, $0032
-        dc.w $0032, $0032, $0032, $0032, $0032, $0032, $0032, $0000
+        dc.w $0000, $0000, $0000, $0000, $0000, $0064, $0064, $0064
+        dc.w $0064, $0064, $0064, $0064, $0064, $0064, $0064, $0000
         dc.w $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
         dc.w $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
         dc.w $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-        dc.w $0014, $0014, $0014, $0014, $0014, $0014, $0014, $0014
-        dc.w $0014, $0014, $0014, $0014, $0014, $0014, $0014, $0014
-        dc.w $0014, $0014, $0014, $0014, $0014, $0014, $0014, $0014
+        dc.w $0028, $0028, $0028, $0028, $0028, $0028, $0028, $0028
+        dc.w $0028, $0028, $0028, $0028, $0028, $0028, $0028, $0028
+        dc.w $0028, $0028, $0028, $0028, $0028, $0028, $0028, $0028
 
 fx_4_wave_offset_sequence:
         dc.w $0320, $0320, $0320, $0320, $0320, $0320, $0320, $0320
