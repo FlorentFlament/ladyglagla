@@ -1,10 +1,13 @@
 # Todos
 
-- Retravailler les couleurs des volets de transition
-- Couper le son à la fin
-- Retoucher des effets
+- Retoucher des effets (surtout le dernier)
 - Mettre à jour les crédits (Scnénario, Animations, textes)
 - Ajouter les Greetings
+- Retravailler la fin
+- Retoucher le texte d'introduction
+- Peaufiner la direction des volets
+
+Optionel:
 - Harmoniser le timing pour les animations avec texte de la première
   partie
 

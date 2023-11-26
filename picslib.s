@@ -8,8 +8,17 @@
         xdef picerase_leftright
         xdef picerase_rightleft
         xdef set_palette
+        xdef set_palette_col
         xdef movepic_4colors
         xdef memcopy_16k
+        xdef clear_screen
+
+        xdef set_palette_col_sup
+
+;;; Address of palette is: 0xffff8240 - 16 words
+;;; https://freemint.github.io/tos.hyp/en/bios_sysvars.html
+PALETTE_ADDRESS = $ffff8240
+PALETTE_15_ADDRESS = PALETTE_ADDRESS+(2*15)
 
 ;;; Display pictures by blocks to make them appear slowly
 ;;; 160 bytes per line
@@ -167,11 +176,33 @@ picdisplay2:
 ;;; Registers are saved then restored
 set_palette:
         movem.l d0-d2/a0-a2,-(sp) ; Save registers possibly scratched by trap
-	move.l	a3,-(sp)
-	move.w	#6,-(sp)	; setpalette
-	trap	#14		; XBIOS trap
-	addq.l	#6,sp
+        move.l  a3,-(sp)
+        move.w  #6,-(sp)        ; setpalette
+        trap    #14             ; XBIOS trap
+        addq.l  #6,sp
         movem.l (sp)+,d0-d2/a0-a2 ; Restore registers
+        rts
+
+;;; set_palette_lastcol code executed in supervisor mode
+;;; d4.w - palette index
+;;; d5.w - color
+set_palette_col_sup:
+        movem.l d4/a0,-(sp)
+        lea.l   PALETTE_ADDRESS,a0
+        move.w  d5,(a0,d4)
+        movem.l (sp)+,d4/a0
+        rts
+
+;;; Sets the last color of the palette
+;;; d4.w - palette index
+;;; d5.w - color
+set_palette_col:
+        movem.l a0-a2/d1-d2,-(sp)
+        pea     set_palette_col_sup
+        move.w  #38,-(sp)    ; Supexec function call
+        trap    #14          ; Call XBIOS
+        addq.l  #6,sp        ; Correct stack
+        movem.l (sp)+,a0-a2/d1-d2
         rts
 
 ;;; arguments
@@ -224,4 +255,15 @@ memcopy_16k:
         bpl     .move_loop
         move.l  (sp)+,d3        ; restore registers d3 and d4 used as indexes
         rts
-        
+
+;;; arguments:
+;;; a4 address of picture
+clear_screen:
+        move.l  d4,-(sp)
+        move.l  #32000-4,d4
+.move_loop:
+        move.l  #$00000000,(a4,d4.w)
+        subq.w  #4,d4
+        bpl     .move_loop
+        move.l  (sp)+,d4
+        rts

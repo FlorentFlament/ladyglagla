@@ -23,6 +23,7 @@
         xref music_data
         xref picscratch_fx
 
+        xref set_palette_col
         xref picdisplay
         xref picdisplay2
         xref picerase_bottomup
@@ -41,7 +42,11 @@
         xref fx_data_1_fx_structure
         xref fx_data_2_fx_structure
 
-MUSIC_TEMPO=40                  ; 75 bpm
+MUSIC_TEMPO = 40                  ; 75 bpm
+COLOR1 = $0577
+COLOR2 = $0065
+COLOR3 = $0656
+COLOR4 = $0764
 
         section code
 main:
@@ -75,21 +80,30 @@ main:
         move.w  #0,d7
 
         ;; picerase_updown pattern
+
+        move.w  #0,d4
+        move.w  #COLOR4,d5
+        jsr     set_palette_col
         move.l  #$00000000,d4   ; 5
         move.l  #$00000000,d5
         jsr     picerase_bottomup
+        jsr     wait_next_pattern
+        lea     text_intro_palette,a3
+        jsr     set_palette
         lea     text_intro,a0
         jsr     textwriter
         add.w   #8,d7           ; 8 beats for previous part
         jsr     spinlock_beat_count
-
         lea.l   glagla07,a3
         jsr     picdisplay2
         add.w   #8,d7
         jsr     spinlock_beat_count
 
-        move.l  #$00000000,d4   ; 5
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR1,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_bottomup
         jsr     wait_next_pattern
         lea.l   picture_callisto_glafouk,a3
@@ -107,8 +121,11 @@ main:
                                 ; 15 beats at 160 ticks per beat minus 10 margin
                                 ; Passed to the `animation` routine
 
-        move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR2,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_leftright
         lea.l   VraiREglagla01_data,a5
         lea.l   animation_data,a6
@@ -121,8 +138,11 @@ main:
         add.w   #16,d7
         jsr     spinlock_beat_count
 
-        move.l  #$ffffffff,d4   ; 3
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR3,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_topdown
         lea.l   VRAI_REglagla02_data,a5
         lea.l   animation_data,a6
@@ -135,8 +155,11 @@ main:
         add.w   #16,d7
         jsr     spinlock_beat_count
 
-        move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR4,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_rightleft
         lea.l   VRAIglagla33_data,a5
         lea.l   animation_data,a6
@@ -149,8 +172,11 @@ main:
         add.w   #16,d7
         jsr     spinlock_beat_count
 
-        move.l  #$ffff0000,d4   ; 1
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR1,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_bottomup
         lea.l   VRAI_REglagla04_data,a5
         lea.l   animation_data,a6
@@ -163,8 +189,11 @@ main:
         add.w   #16,d7
         jsr     spinlock_beat_count
 
-        move.l  #$ffff0000,d4   ; 1
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR3,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_bottomup
         jsr     wait_next_pattern
         lea.l   callisto_ladyglagla_320x200,a3
@@ -174,8 +203,11 @@ main:
 
 ;; Second part - with FXs
 
-        move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d4   ; 4
+        move.w  #30,d4
+        move.w  #COLOR2,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_leftright
         lea.l   VraiREglagla01_data,a5
         lea.l   animation_data,a6
@@ -189,8 +221,11 @@ main:
         add.w   #16,d7          ; fx_wave_animation will end with proper beat
         jsr     fx_wave_animation
 
-        move.l  #$ffffffff,d4   ; 3
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR3,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_rightleft
         lea.l   VRAI_REglagla02_data,a5
         lea.l   animation_data,a6
@@ -203,8 +238,11 @@ main:
         add.w   #16,d7
         jsr     fx_wave_animation
 
-        move.l  #$ffff0000,d4   ; 1
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR4,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_topdown
         lea.l   VRAIglagla33_data,a5
         lea.l   animation_data,a6
@@ -217,8 +255,11 @@ main:
         add.w   #16,d7
         jsr     fx_wave_animation
 
-        move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR1,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_bottomup
         lea.l   VRAI_REglagla04_data,a5
         lea.l   animation_data,a6
@@ -232,8 +273,11 @@ main:
         jsr     fx_wave_animation
 
         ;; Flush
-        move.l  #$ffffffff,d4   ; 3
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR2,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_leftright
         jsr     wait_next_pattern
         lea     picture_logo,a3
@@ -252,8 +296,11 @@ main:
         add.w   #24,d7           ; 8 beats for previous part
         jsr     spinlock_beat_count
 
-        move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR3,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_topdown
         jsr     wait_next_pattern
         lea.l   glagla07,a3
@@ -261,8 +308,11 @@ main:
         add.w   #16,d7
         jsr     spinlock_beat_count
 
-        move.l  #$0000ffff,d4   ; 2
-        move.l  #$00000000,d5
+        move.w  #30,d4
+        move.w  #COLOR4,d5
+        jsr     set_palette_col
+        move.l  #$ffffffff,d4   ; 5
+        move.l  #$ffffffff,d5
         jsr     picerase_topdown
 
         ;; Restore previous VBL
@@ -313,9 +363,12 @@ restore_vbl:
         rts
 
         section text_data,data
+text_intro_palette:
+        dc.w    COLOR4,$0000,$0000,$0000,$0000,$0000,$0000,$0000
+        dc.w    $0000,$0000,$0000,$0000,$0000,$0000,$0000,COLOR4
 text_intro:
-        dc.b    $1b,'c',' '+0   ; set background color to black
-        dc.b    $1b,'b',' '+15      ; set foreground color to red
+        dc.b    $1b,'c',' '+0
+        dc.b    $1b,'b',' '+1
         dc.b    $1b,'Y',' '+9,' '+17,"Flush"
         dc.b    $1b,'Y',' '+11,' '+16,"presents"
         dc.b    $1b,'Y',' '+13,' '+12,"an Atari ST demo"

@@ -10,6 +10,7 @@
         xref get_hz_200
         xref set_palette
         xref spinlock_hz200_simple
+        xref clear_screen
 
         ;; Number of hz_200 units (200th of seconds) per frame
         ;; 4 200th of seconds per frame for 50 FPS
@@ -32,6 +33,7 @@ fx_wave_animation:
         move.l  a3,a0
         move.l  (a5),a3
         jsr     set_palette
+        jsr     clear_screen
 
         ;; Initialize fx structures before calling main fx loop
         jsr     get_hz_200

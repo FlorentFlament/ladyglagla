@@ -85,6 +85,7 @@ animation:
         move.l  (a5),a3         ; -> a3 palette address
         move.w  #0,d5           ; initialize sequence index in d5
         jsr     set_palette
+        jsr     clear_screen
         jsr     draw_pic
         jsr     draw_char
 
