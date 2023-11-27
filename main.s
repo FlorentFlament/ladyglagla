@@ -5,7 +5,7 @@
         ;; pictures data
         xref picture_callisto_glafouk
         xref picture_logo
-        xref callisto_ladyglagla_320x200
+        xref callisto_ladyglaglav8
         xref glagla07
 
         ;; animations data
@@ -189,7 +189,7 @@ main:
         move.l  #$ffffffff,d5
         jsr     picerase_bottomup
         jsr     wait_next_pattern
-        lea.l   callisto_ladyglagla_320x200,a3
+        lea.l   callisto_ladyglaglav8,a3
         jsr     picdisplay2
         add.w   #8,d7
         jsr     spinlock_beat_count
@@ -424,8 +424,8 @@ text_glagla_3:
         dc.b    $1b,'Y',' '+24,' '+0,"parties to shake the crowd's booty..."
         dc.b    0
 text_glagla_4:
-        dc.b    $1b,'Y',' '+23,' '+0,"If music's played then it's just a game."
-        dc.b    $1b,'Y',' '+24,' '+0,"And as games are for kids then.. Mouhaha"
+        dc.b    $1b,'Y',' '+23,' '+0,"If music is played then it's just a game"
+        dc.b    $1b,'Y',' '+24,' '+0,"but games are for kids then... Mouhahaha"
         dc.b    0
 
 text_credits:
