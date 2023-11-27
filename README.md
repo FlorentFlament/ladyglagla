@@ -1,13 +1,10 @@
 # Todos
 
 Optionel:
+- Dynamisme sur les caractères dans les textes (des animations au
+  moins, voire en intro)
 - Peaufiner la direction des volets
 - Effet drapeau sur le screen de fin
-- Harmoniser le timing pour les animations avec texte de la première
-  partie
-
-# Nice to have
-
 - double buffering
 
 # Some notes

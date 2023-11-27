@@ -131,9 +131,8 @@ main:
         move.l  #text_glagla_1,d3
         lea.l   animation_data,a5
         lea.l   VraiREglagla01_sequence,a6
-        jsr     animation
         add.w   #16,d7
-        jsr     spinlock_beat_count
+        jsr     animation
 
         move.w  #30,d4
         move.w  #COLOR3,d5
@@ -148,9 +147,8 @@ main:
         move.l  #text_glagla_2,d3
         lea.l   animation_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
-        jsr     animation
         add.w   #16,d7
-        jsr     spinlock_beat_count
+        jsr     animation
 
         move.w  #30,d4
         move.w  #COLOR4,d5
@@ -165,9 +163,8 @@ main:
         move.l  #text_glagla_3,d3
         lea.l   animation_data,a5
         lea.l   VRAIglagla33_sequence,a6
-        jsr     animation
         add.w   #16,d7
-        jsr     spinlock_beat_count
+        jsr     animation
 
         move.w  #30,d4
         move.w  #COLOR1,d5
@@ -182,9 +179,8 @@ main:
         move.l  #text_glagla_4,d3
         lea.l   animation_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
-        jsr     animation
         add.w   #16,d7
-        jsr     spinlock_beat_count
+        jsr     animation
 
         move.w  #30,d4
         move.w  #COLOR3,d5

@@ -6,17 +6,17 @@
         xref memcopy_16k
 
 ;;; a3 address of time_pointers (3x longs)
+;;; d7 contains end beat count
 ;;; -> d0 contains hz_200
 spinlock_hz200_3:
-.loop:
+        .loop:
+        cmp.w   beat_cnt,d7     ; Have we reached beat count
+        ble     .break
         move.l  $0004ba,d0      ; retrieve hz_200
         cmp.l   0(a3),d0        ; compare with t_next_chr
         bgt     .break
         cmp.l   4(a3),d0        ; compare with t_next_pic
-        bgt     .break
-        cmp.l   4(a3),d0        ; compare with t_end
-        bgt     .break
-        bra     .loop
+        ble     .loop
 .break:
         rts
 
@@ -67,6 +67,7 @@ draw_char:
 ;;; a4 address of video memory
 ;;; a5 address of animation data
 ;;; a6 address of animation sequence
+;;; d7 contains end beat count
 ;;; registers will be saved and restored
 animation:
         movem.l a0-a3/d0-d3/d5,-(sp)
@@ -89,7 +90,7 @@ animation:
         jsr     draw_pic
         jsr     draw_char
 
-        move.l  sp,a3           ; store address of time counters for use in spinlock
+        move.l  sp,a3   ; store address of time counters for use in spinlock
 .main_loop:
         ;; Spin lock until one event is reached
         pea     spinlock_hz200_3
@@ -98,6 +99,8 @@ animation:
         addq.l  #6,sp        ; Correct stack
 
         ;; What to we do ?
+        cmp.w   beat_cnt,d7     ; have we reached the end of animation
+        ble     .end
         cmp.l   0(sp),d0        ; compare with t_next_chr
         ble     .t_next_pic
         ;; Display a character
@@ -105,14 +108,13 @@ animation:
         add.l   #10,0(sp)       ; prepare for next character display
 .t_next_pic:
         cmp.l   4(sp),d0        ; compare with t_next_pic
-        ble     .t_end
+        ble     .main_loop
         ;; Display next pic
         jsr     draw_pic
         add.l   #25,4(sp)       ; prepare for next pic display
-.t_end:
-        cmp.l   8(sp),d0        ; compare with t_end
-        ble     .main_loop
+        bra     .main_loop
         ;; End of animation
+.end:
         add.l   #12,sp          ; Unallocate the 3 longs in stack
         movem.l (sp)+,a0-a3/d0-d3/d5
         rts
