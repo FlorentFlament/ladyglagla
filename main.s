@@ -90,6 +90,7 @@ main:
         lea     text_intro_palette,a3
         jsr     set_palette
         lea     text_intro,a3
+        move.w  #4,d3
         jsr     textwriter
         add.w   #8,d7           ; 8 beats for previous part
         jsr     spinlock_beat_count
@@ -108,12 +109,9 @@ main:
         lea.l   picture_callisto_glafouk,a3
         jsr     picdisplay2
         lea     text_glafouk_1,a3
+        move.w  #9,d3
         jsr     textwriter
-        move.l  #100,d3         ; wait
-        jsr     wait_hz_200
-        lea     text_glafouk_2,a3
-        jsr     textwriter
-        add.w   #16,d7
+        add.w   #32,d7
         jsr     spinlock_beat_count
 
         move.l  #2390,d6        ; duration of animation - (- (* 15 160) 10)
@@ -212,8 +210,6 @@ main:
         lea.l   animation_data,a6
         jsr     uncompress_animation
         jsr     wait_next_pattern
-        move.l  #790,d6        ; duration of animation - (* 5 160)
-        move.l  #no_text,d3
         lea.l   animation_data,a5
         lea.l   VraiREglagla01_sequence,a6
         lea.l   fx_data_1_fx_structure,a3
@@ -230,7 +226,6 @@ main:
         lea.l   animation_data,a6
         jsr     uncompress_animation
         jsr     wait_next_pattern
-        move.l  #no_text,d3
         lea.l   animation_data,a5
         lea.l   VRAI_REglagla02_sequence,a6
         lea.l   fx_data_2_fx_structure,a3
@@ -247,7 +242,6 @@ main:
         lea.l   animation_data,a6
         jsr     uncompress_animation
         jsr     wait_next_pattern
-        move.l  #no_text,d3
         lea.l   animation_data,a5
         lea.l   VRAIglagla33_sequence,a6
         lea.l   fx_data_3_fx_structure,a3
@@ -264,7 +258,6 @@ main:
         lea.l   animation_data,a6
         jsr     uncompress_animation
         jsr     wait_next_pattern
-        move.l  #no_text,d3
         lea.l   animation_data,a5
         lea.l   VRAI_REglagla04_sequence,a6
         lea.l   fx_data_4_fx_structure,a3
@@ -284,19 +277,19 @@ main:
         move.l  #500,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
-        move.w  #5000,d7        ; picscratch_fx parameter
+        move.w  #5000,d6        ; picscratch_fx parameter
         jsr     picscratch_fx
         jsr     wait_next_pattern
         lea     text_credits,a3
+        move.w  #8,d3
         jsr     textwriter
         move.l  #500,d3         ; wait
         jsr     wait_hz_200
         jsr     wait_next_pattern
         jsr     picscratch_fx
         jsr     greetz
-        jsr     wait_next_pattern
-        ;; add.w   #24,d7           ; 8 beats for previous part
-        ;; jsr     spinlock_beat_count
+        add.w   #120,d7
+        jsr     spinlock_beat_count
 
         move.w  #30,d4
         move.w  #COLOR3,d5
@@ -307,8 +300,9 @@ main:
         jsr     wait_next_pattern
         lea.l   glagla07,a3
         jsr     picdisplay2
-        add.w   #16,d7
-        jsr     spinlock_beat_count
+
+        .final_loop:
+        bra     .final_loop
 
         move.w  #30,d4
         move.w  #COLOR4,d5
@@ -333,16 +327,19 @@ main:
 
 greetz:
         movem.l d0-d7/a0-a6,-(sp)
-        move.w  #2000,d7        ; picscratch_fx parameter
+        move.w  #2000,d6        ; picscratch_fx parameter
         lea.l   text_greetz,a3
-        .loop:
+        move.w  #8,d3
         jsr     textwriter
         jsr     wait_next_pattern
+        .loop:
         jsr     picscratch_fx
+        jsr     wait_next_pattern
+        jsr     textwriter
         jsr     wait_next_pattern
         tst.b   (a3)
         bne     .loop
-        move.w  #3000,d7        ; picscratch_fx parameter
+        move.w  #5000,d6        ; picscratch_fx parameter
         jsr     picscratch_fx
         movem.l (sp)+,d0-d7/a0-a6
         rts
@@ -386,51 +383,67 @@ text_intro_palette:
 text_intro:
         dc.b    $1b,'c',' '+0
         dc.b    $1b,'b',' '+1
-        dc.b    $1b,'Y',' '+9,' '+17,"Flush"
-        dc.b    $1b,'Y',' '+11,' '+16,"presents"
-        dc.b    $1b,'Y',' '+13,' '+12,"an Atari ST demo"
-        dc.b    $1b,'Y',' '+15,' '+1,"at Silly Venture 2023 winter edition"
+        dc.b    $1b,'Y',' '+8,' '+17,"Flush"
+        dc.b    $1b,'Y',' '+10,' '+16,"presents"
+        dc.b    $1b,'Y',' '+12,' '+8,"our first Atari ST demo"
+        dc.b    $1b,'Y',' '+14,' '+5,"running on stock Atari 520 STF"
+        dc.b    $1b,'Y',' '+16,' '+2,"at Silly Venture 2023 winter edition"
         dc.b    0
 text_glafouk_1:
         ;; Beware ! Need to add ' ' to the color to make it work !
         ;; Otherwise, behaviour is TOS dependant !
         dc.b    $1b,'c',' '+0   ; set background color to black
         dc.b    $1b,'b',' '+1       ; set foreground color to red
-        dc.b    $1b,'Y',' '+5,' '+14,"Hey, hey !"
-        dc.b    $1b,'Y',' '+6,' '+14,"Have you seen my t-shirt ?"
-        dc.b    0
-text_glafouk_2:
-        dc.b    $1b,'Y',' '+7,' '+14,"No ?"
-        dc.b    $1b,'Y',' '+8,' '+14,"But it's coz it's"
-        dc.b    $1b,'Y',' '+9,' '+14,"under my sweatshirt..."
-        dc.b    $1b,'Y',' '+10,' '+14,"To see it, I'll have"
-        dc.b    $1b,'Y',' '+11,' '+14,"to undress a bit..."
-        dc.b    $1b,'Y',' '+12,' '+14,"Wanna play strip p0ke(r)"
-        dc.b    $1b,'Y',' '+13,' '+14,"and see my..."
-        dc.b    $1b,'Y',' '+14,' '+14,"poke her face ?"
-no_text:
+        dc.b    $1b,'Y',' '+4,' '+14,"Is Glafouk non bean..."
+        dc.b    $1b,'Y',' '+5,' '+14,"Are he ?"
+        dc.b    $1b,'Y',' '+6,' '+14,"He is none been Harry"
+        dc.b    $1b,'Y',' '+7,' '+14,"even if he's been hairy..."
+        dc.b    $1b,'Y',' '+8,' '+14,"He's globably merry but"
+        dc.b    $1b,'Y',' '+9,' '+14,"he's not Mary however..."
+        dc.b    $1b,'Y',' '+10,' '+14,"Sometimes he's wearing"
+        dc.b    $1b,'Y',' '+11,' '+14,"skirts in Aalst,"
+        dc.b    $1b,'Y',' '+12,' '+14,"but does it make him"
+        dc.b    $1b,'Y',' '+13,' '+14,"a lady ? Well well well..."
+        dc.b    $1b,'Y',' '+14,' '+14,"The clothes do not make"
+        dc.b    $1b,'Y',' '+15,' '+14,"the woman or the man..."
+        dc.b    $1b,'Y',' '+16,' '+14,"And the little bean"
+        dc.b    $1b,'Y',' '+17,' '+14,"between your legs neither."
+        dc.b    $1b,'Y',' '+18,' '+14,"Then... You are all a bit"
+        dc.b    $1b,'Y',' '+19,' '+14,"Lady Glagla yourself..."
+        dc.b    $1b,'Y',' '+20,' '+14,"Mouhahaha !"
         dc.b    0
 
 text_glagla_1:
         dc.b    $1b,'c',' '+0   ; set text background color to background
         dc.b    $1b,'b',' '+4   ; set text color to index 4
-        dc.b    $1b,'Y',' '+24,' '+0,"Hey, d'ya hear that fluffy mo5 platini ?",0
+        dc.b    $1b,'Y',' '+23,' '+0,"Scene musicians make music, "
+        dc.b    $1b,'Y',' '+24,' '+0,"Lady Glagla makes bleepy noises..."
+        dc.b    0
 text_glagla_2:
-        dc.b    $1b,'Y',' '+24,' '+0,"Wouhou, let's run Hell as Lady Glagla !",0
+        dc.b    $1b,'Y',' '+23,' '+0,"They sound and taste dirty like a fart,"
+        dc.b    $1b,'Y',' '+24,' '+0,"but look how it's groovy baby..."
+        dc.b    0
 text_glagla_3:
-        dc.b    $1b,'Y',' '+24,' '+0,"Hey hey, time for a li'le disco drink ?",0
+        dc.b    $1b,'Y',' '+23,' '+0,"And they even have been played on posh"
+        dc.b    $1b,'Y',' '+24,' '+0,"parties to shake the crowd's booty..."
+        dc.b    0
 text_glagla_4:
-        dc.b    $1b,'Y',' '+24,' '+0,"Let's make some noise on that keyboard !",0
+        dc.b    $1b,'Y',' '+23,' '+0,"If music's played then it's just a game."
+        dc.b    $1b,'Y',' '+24,' '+0,"And as games are for kids then.. Mouhaha"
+        dc.b    0
 
 text_credits:
         ;; colors are based on Flush logo palette
         dc.b    $1b,'c',' '+1       ; set background color to black
-        dc.b    $1b,'b',' '+12      ; set foreground color to red
-        dc.b    $1b,'Y',' '+10,' '+6,"Graphics: Yogib33r / Callisto"
-        dc.b    $1b,'b',' '+5       ; set color to yellow
-        dc.b    $1b,'Y',' '+12,' '+13,"Music: Glafouk"
-        dc.b    $1b,'b',' '+9       ; set foreground color to green
-        dc.b    $1b,'Y',' '+14,' '+14,"Code: Flewww"
+        dc.b    $1b,'b',' '+12       ; set foreground color to yellow
+        ;; dc.b    $1b,'b',' '+5      ; set foreground color to red
+        dc.b    $1b,'Y',' '+7,' '+12,"Theme: Yogib33r"
+        dc.b    $1b,'Y',' '+9,' '+5,"Graphics: Yogib33r / Callisto"
+        ;; dc.b    $1b,'b',' '+9       ; set foreground color to green
+        dc.b    $1b,'Y',' '+11,' '+10,"Animations: Yogib33r"
+        dc.b    $1b,'Y',' '+13,' '+13,"Music: Glafouk"
+        dc.b    $1b,'Y',' '+15,' '+13,"Texts: Glafouk"
+        dc.b    $1b,'Y',' '+17,' '+14,"Code: Flewww"
         dc.b    0
 
 text_greetz:

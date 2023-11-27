@@ -2,17 +2,17 @@
         xdef picscratch_fx
 
 ;;; Parameters:
-;;; d7 - number of iterations
+;;; d6 - number of iterations
 picscratch_fx:
-        movem.l d0-d7/a0-a7,-(sp)
+        movem.l d0-d7/a0-a6,-(sp)
 
         ;; Get address of video memory
         move.w  #2,-(sp)        ; Physbase function call
         trap    #14             ; Call XBIOS
         addq.l  #2,sp
-        move.l  d0,d6           ; Save physical screen ram base in d6
+        move.l  d0,d5           ; Save physical screen ram base in d5
 
-        subq.w  #1,d7           ; Rotate d7 lines
+        subq.w  #1,d6           ; Rotate d6 lines
         ;; Rotate one line
 .line_loop:
         move.w  #17,-(sp)       ; random
@@ -29,12 +29,12 @@ picscratch_fx:
         move.w  d0,a0
         asl.w   #2,d0           ; *128
         add.w   d0,a0           ; *160
-        add.l   d6,a0
+        add.l   d5,a0
 
         jsr     line_shift_left
-        dbra    d7,.line_loop   ; <- bug
+        dbra    d6,.line_loop   ; <- bug
 
-        movem.l (sp)+,d0-d7/a0-a7
+        movem.l (sp)+,d0-d7/a0-a6
         rts
 
 ;;; Shifts one line to the left

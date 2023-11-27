@@ -1,11 +1,8 @@
 # Todos
 
-- Mettre à jour les crédits (Scnénario, Animations, textes)
-- Retravailler la fin
-- Retoucher le texte d'introduction
-- Peaufiner la direction des volets
-
 Optionel:
+- Peaufiner la direction des volets
+- Effet drapeau sur le screen de fin
 - Harmoniser le timing pour les animations avec texte de la première
   partie
 
