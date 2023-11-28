@@ -5,7 +5,7 @@
         ;; pictures data
         xref picture_callisto_glafouk
         xref picture_logo
-        xref callisto_ladyglaglav8
+        xref callisto_ladyglaglav9
         xref glagla07
 
         ;; animations data
@@ -189,7 +189,7 @@ main:
         move.l  #$ffffffff,d5
         jsr     picerase_bottomup
         jsr     wait_next_pattern
-        lea.l   callisto_ladyglaglav8,a3
+        lea.l   callisto_ladyglaglav9,a3
         jsr     picdisplay2
         add.w   #8,d7
         jsr     spinlock_beat_count
