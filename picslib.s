@@ -1,7 +1,6 @@
 ;;; Basic picture display subroutines
         xref wait_hz_200
 
-        xdef picdisplay
         xdef picdisplay2
         xdef picerase_bottomup
         xdef picerase_topdown
@@ -24,44 +23,6 @@ PALETTE_15_ADDRESS = PALETTE_ADDRESS+(2*15)
 ;;; 160 bytes per line
 ;;; 8 lines at a time
 DISPLAY_STEP = 10*160
-
-;;; a3 must contain address of picture
-;;; a4 address of video memory
-;;; d4 and d5 are the 2 longs to be used as erase colors
-;;; All registers are saved then restored
-picdisplay:
-        ;; d6 - physical screen address
-        ;; d5 - base picture address
-        movem.l a3/a5/a6/d0/d3/d5/d6,-(sp)
-        move.l  a3,d5
-        move.l  a4,d6   ; Save physical screen ram base in d6
-
-        move.l  d5,a3
-        jsr     set_palette
-
-        ;; Copy picture data to video memory
-        ;; Data starts after palette, i.e 32bytes after start of data
-        add.l   #32,d5
-        move.l  d5,a5           ; a5 points to first line to draw
-        move.l  d6,a6           ; a6 points to first line of video memory
-        add.l   #32000-DISPLAY_STEP,a5         ; Move a block of DISPLAY_STEP data
-        add.l   #32000-DISPLAY_STEP,a6         ;
-.picdisplay_loop:
-        move.w  #DISPLAY_STEP-4,d0       ; Move long ints (4 bytes)
-.picdisplay_line_loop:                   ; Move a DISPLAY_STEP block 4 bytes at a time
-        move.l  (a5,d0.w),(a6,d0.w)
-        subq.w  #4,d0
-        bpl     .picdisplay_line_loop
-        ;; Wait loop
-        move.l  #1,d3           ; Wait 1/200th of a second
-        jsr     wait_hz_200
-        sub.l   #DISPLAY_STEP,a5
-        sub.l   #DISPLAY_STEP,a6
-        cmp.l   d5,a5
-        bge     .picdisplay_loop
-
-        movem.l (sp)+,a3/a5/a6/d0/d3/d5/d6
-        rts
 
 ;;; Erases the screen
 ;;; d4 and d5 are the 2 longs to be used as erase colors

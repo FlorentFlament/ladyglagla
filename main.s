@@ -25,7 +25,6 @@
         xref picscratch_fx
 
         xref set_palette_col
-        xref picdisplay
         xref picdisplay2
         xref picerase_bottomup
         xref picerase_topdown
