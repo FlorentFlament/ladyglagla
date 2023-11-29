@@ -1,6 +1,8 @@
         xdef tempo_cnt
         xdef beat_cnt
         xdef main
+        xdef shadow_screen
+        xdef current_screen
 
         ;; pictures data
         xref picture_callisto_glafouk
@@ -50,6 +52,14 @@ COLOR4 = $0764
         section code
 main:
         movem.l d0-d7/a0-a6,-(sp)
+        move.l  sp,stackpointer_backup
+
+        sub.l   #32000,sp       ; allocate some room for screen buffer
+        move.l  sp,d0
+        and.l  #$ffffff00,d0
+        move.l  d0,sp   ; align sp to 256 bytes
+        move.l  sp,shadow_screen ; save screenbuffer pointer
+        ;; From here stack can be used as usual
 
         ;; Hide mouse with a line A function
         dc.w    $A00A
@@ -73,7 +83,8 @@ main:
         move.w  #2,-(sp)        ; Physbase function call
         trap    #14             ; Call XBIOS
         addq.l  #2,sp
-        move.l  d0,a4           ; Save physical screen ram base in a4
+        move.l  d0,current_screen           ; Save physical screen ram base in current_screen
+        move.l  current_screen,a4           ; and a4
 
         ;; Initialize beat reference (used to synchronize parts)
         move.w  #0,d7
@@ -316,6 +327,7 @@ main:
         ;; Display mouse with a line A function
         dc.w    $A009
 
+        move.l  stackpointer_backup,sp ; restore stack pointer
         movem.l d0-d7/a0-a6,-(sp)
         clr.w   -(sp)           ; Pterm0
         trap    #1              ; GEMDOS
@@ -474,7 +486,7 @@ text_greetz:
         dc.b    $1b,'Y',' '+3,' '+32,"X-men",0
         dc.b    0
 
-        align 2
+        align   1               ; Word alignment required
 animation_data:
         dc.l    0               ; to be updated at runtime
         dc.l    0
@@ -484,6 +496,10 @@ animation_data:
         dc.l    animation_pic5
 
         section bss
+stackpointer_backup:    dcb.l   1
+shadow_screen:          dcb.l   1
+current_screen:         dcb.l   1
+
 tempo_cnt:              dcb.w   1
 beat_cnt:               dcb.w   1
 

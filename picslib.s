@@ -64,11 +64,11 @@ picdisplay:
         rts
 
 ;;; Erases the screen
-;;; a4 address of video memory
+;;; (a4) address of video memory <- don't use this
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase_bottomup:
         movem.l a6/d0/d3,-(sp)
-        move.l  a4,a6                   ;
+        move.l  current_screen,a6                   ;
         add.l   #32000-DISPLAY_STEP,a6  ; a6 point to 1st line to draw
 .loop:
         move.w  #DISPLAY_STEP-8,d0
@@ -81,18 +81,19 @@ picerase_bottomup:
         move.l  #1,d3
         jsr     wait_hz_200
         sub.l   #DISPLAY_STEP,a6
-        cmp.l   a4,a6
+        cmp.l   current_screen,a6
         bge     .loop
 
         movem.l (sp)+,a6/d0/d3
         rts
 
 ;;; Erases the screen from top to bottom
-;;; a4 address of video memory
+;;; (a4) address of video memory <- don´t use this
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase_topdown:
         movem.l a4/a6/d0/d3,-(sp)
-        move.l  a4,a6
+        move.l  current_screen,a6
+        move.l  current_screen,a4
         add.w   #32000,a4       ; Must stop there
 .loop:
         move.w  #0,d0
@@ -113,11 +114,12 @@ picerase_topdown:
         rts
 
 ;;; Erases the screen from left to right
-;;; a4 address of video memory
+;;; (a4) address of video memory <- don't use this
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase_leftright:
         movem.l a4/a6/d0/d3,-(sp)
-        move.l  a4,a6
+        move.l  current_screen,a6
+        move.l  current_screen,a4
         add.w   #160,a4       ; Must stop there
 .loop:
         move.w  #0,d0
@@ -138,11 +140,11 @@ picerase_leftright:
         rts
 
 ;;; Erases the screen from right to left
-;;; a4 address of video memory
+;;; (a4) address of video memory <- don´t use this
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase_rightleft:
         movem.l a4/a6/d0/d3,-(sp)
-        move.l  a4,a6
+        move.l  current_screen,a6
         add.w   #160-8,a6       ; Start there
 .loop:
         move.w  #32000-160,d0
@@ -155,20 +157,26 @@ picerase_rightleft:
         move.l  #1,d3
         jsr     wait_hz_200
         sub.w   #8,a6           ; previous column
-        cmp.l   a4,a6         ; end of line
+        cmp.l   current_screen,a6         ; end of line
         bge     .loop
 
         movem.l (sp)+,a4/a6/d0/d3
         rts
 
 ;;; a3 address of picture (prefixed by palette)
-;;; a4 address of video ram
+;;; (a4) address of video ram <- not using anymore
 picdisplay2:
         move.l  a3,-(sp)
-        jsr set_palette
+
+        move.l  shadow_screen,a4 ; write the picture in the shadow buffer
         add.l   #32,a3          ; picture data is 32 bytes after the palette
-        jsr movepic_16colors
+        jsr     movepic_16colors
+
+        ;; The switch buffers and set palette
+        jsr     switch_screen_buffers ; a4 will contain the new current_screen
+
         move.l  (sp)+,a3
+        jsr     set_palette           ; a3 contains the new palette
         rts
 
 ;;; Set picture palette
@@ -257,13 +265,41 @@ memcopy_16k:
         rts
 
 ;;; arguments:
-;;; a4 address of picture
+;;; (a4) address of picture <- not used anymore
 clear_screen:
         move.l  d4,-(sp)
+        move.l  shadow_screen,a4 ; clear shadow screen
         move.l  #32000-4,d4
 .move_loop:
         move.l  #$00000000,(a4,d4.w)
         subq.w  #4,d4
         bpl     .move_loop
+        jsr     switch_screen_buffers ; then switch buffers
         move.l  (sp)+,d4
+        rts
+
+;;; a4 new screen address (to be set)
+set_screen_sup:
+        ; doc: https://freemint.github.io/tos.hyp/en/bios_sysvars.html
+        move.l  a4,$45e         ; screenpt
+        rts
+
+;;; Switches current_screen and shadow_screen pointers
+;;; Set Screen Physical Address to new current_screen
+;;; Set new current_screen in a4 (for old routines still using this)
+switch_screen_buffers:
+        movem.l d0-d2/a0-a2,-(sp)
+
+        ;; Switch current_screen with shadow_screen
+        ;; At the end the new current_screen is also in a4
+        move.l  shadow_screen,a4
+        move.l  current_screen,shadow_screen
+        move.l  a4,current_screen
+
+        pea     set_screen_sup
+        move.w  #38,-(sp)    ; Supexec function call
+        trap    #14          ; Call XBIOS
+        addq.l  #6,sp        ; Correct stack
+
+        movem.l (sp)+,d0-d2/a0-a2
         rts
