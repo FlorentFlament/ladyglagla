@@ -436,7 +436,7 @@ text_glagla_3:
         dc.b    0
 text_glagla_4:
         dc.b    $1b,'Y',' '+23,' '+0,"If music is played then it's just a game"
-        dc.b    $1b,'Y',' '+24,' '+0,"but games are for kids then... Mouhahaha"
+        dc.b    $1b,'Y',' '+24,' '+0,"but games are for kids then... Mouhaha !"
         dc.b    0
 
 text_credits:
