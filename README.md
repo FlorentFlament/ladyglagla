@@ -5,7 +5,6 @@ Optionel:
   moins, voire en intro)
 - Peaufiner la direction des volets
 - Effet drapeau sur le screen de fin
-- double buffering
 
 # Some notes
 
