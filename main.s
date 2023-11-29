@@ -88,8 +88,6 @@ main:
         ;; Initialize beat reference (used to synchronize parts)
         move.w  #0,d7
 
-        ;; picerase_updown pattern
-
         move.w  #0,d4
         move.w  #COLOR4,d5
         jsr     set_palette_col
@@ -346,7 +344,7 @@ greetz:
         jsr     wait_next_pattern
         tst.b   (a3)
         bne     .loop
-        move.w  #5000,d6        ; picscratch_fx parameter
+        move.w  #8000,d6        ; picscratch_fx parameter
         jsr     picscratch_fx
         movem.l (sp)+,d0-d7/a0-a6
         rts
