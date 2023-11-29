@@ -3,6 +3,7 @@
         xdef wait_next_pattern
         xdef spinlock_hz200_simple
         xdef spinlock_beat_count
+        xdef transition
 
         xref beat_cnt
 
@@ -72,4 +73,24 @@ spinlock_hz200_simple:
         blt     .spin_loop
 
         move.l  (sp)+,d0
+        rts
+
+;;; a3 - Adresse of new palette
+transition:
+        movem.l d0-d2/a0-d2,-(sp)
+
+        ;; Wait for vsync.
+        ;; ensuring that the screen switch and the set_palette are
+        ;; performed during the same VBL.
+        ;; Yeah I know the probability is very low, but I'm fine with
+        ;; spending 1/50th second to lower this probability down to 0.
+        move.w    #37,-(sp)    ; Offset 0
+        trap      #14          ; Call XBIOS
+        addq.l    #2,sp        ; Correct stack
+
+        ;; The switch buffers and set palette
+        jsr     switch_screen_buffers ; a4 will contain the new current_screen
+        jsr     set_palette           ; a3 contains the new palette
+
+        movem.l (sp)+,d0-d2/a0-d2
         rts

@@ -8,9 +8,9 @@
 
         xref beat_cnt
         xref get_hz_200
-        xref set_palette
         xref spinlock_hz200_simple
         xref clear_screen
+        xref transition
 
         ;; Number of hz_200 units (200th of seconds) per frame
         ;; 4 200th of seconds per frame for 50 FPS
@@ -28,12 +28,13 @@ ANIMATION_HZ200_PERIOD=25       ; 1 image every 25 hz200 i.e 8 FPS
 ;;; d7 - beat count to wait for
 fx_wave_animation:
         movem.l d0-d7/a0-a6,-(sp)
+        move.l  a3,a0           ; moving structure address - a3 will be used
 
-        ;; set palette
-        move.l  a3,a0
-        move.l  (a5),a3
-        jsr     set_palette
+        move.l  shadow_screen,a4 ; clear shadow screen
         jsr     clear_screen
+
+        move.l  (a5),a3
+        jsr     transition
 
         ;; Initialize fx structures before calling main fx loop
         jsr     get_hz_200

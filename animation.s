@@ -1,7 +1,6 @@
         xdef animation
         xdef uncompress_animation
 
-        xref set_palette
         xref movepic_4colors
         xref memcopy_16k
 
@@ -83,12 +82,18 @@ animation:
         move.l  d0,8(sp)
         add.l   d6,8(sp)     ; time before end
 
-        move.l  (a5),a3         ; -> a3 palette address
         move.w  #0,d5           ; initialize sequence index in d5
-        jsr     set_palette
+                                ; required by draw_pic
+        move.l  shadow_screen,a4 ; Draw on shadow screen
         jsr     clear_screen
         jsr     draw_pic
-        jsr     draw_char
+
+        move.l  (a5),a3         ; palette
+        jsr     transition
+
+        jsr     draw_char       ; Actually better after transitioning
+        ;; though it doesn't really matter since first character are
+        ;; for positionning
 
         move.l  sp,a3   ; store address of time counters for use in spinlock
 .main_loop:

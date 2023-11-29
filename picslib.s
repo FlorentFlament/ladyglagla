@@ -1,5 +1,6 @@
 ;;; Basic picture display subroutines
         xref wait_hz_200
+        xref transition
 
         xdef picdisplay2
         xdef picerase_bottomup
@@ -11,6 +12,7 @@
         xdef movepic_4colors
         xdef memcopy_16k
         xdef clear_screen
+        xdef switch_screen_buffers
 
         xdef set_palette_col_sup
 
@@ -128,11 +130,8 @@ picdisplay2:
         add.l   #32,a3          ; picture data is 32 bytes after the palette
         jsr     movepic_16colors
 
-        ;; The switch buffers and set palette
-        jsr     switch_screen_buffers ; a4 will contain the new current_screen
-
         move.l  (sp)+,a3
-        jsr     set_palette           ; a3 contains the new palette
+        jsr     transition
         rts
 
 ;;; Set picture palette
@@ -221,15 +220,14 @@ memcopy_16k:
         rts
 
 ;;; arguments:
+;;; a4 - screen memory to be cleared
 clear_screen:
         move.l  d4,-(sp)
-        move.l  shadow_screen,a4 ; clear shadow screen
         move.l  #32000-4,d4
 .move_loop:
         move.l  #$00000000,(a4,d4.w)
         subq.w  #4,d4
         bpl     .move_loop
-        jsr     switch_screen_buffers ; then switch buffers
         move.l  (sp)+,d4
         rts
 
