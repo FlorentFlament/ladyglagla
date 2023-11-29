@@ -447,7 +447,7 @@ text_credits:
         ;; dc.b    $1b,'b',' '+9       ; set foreground color to green
         dc.b    $1b,'Y',' '+11,' '+10,"Animations: Yogib33r"
         dc.b    $1b,'Y',' '+13,' '+13,"Music: Glafouk"
-        dc.b    $1b,'Y',' '+15,' '+13,"Texts: Glafouk"
+        dc.b    $1b,'Y',' '+15,' '+13,"Words: Glafouk"
         dc.b    $1b,'Y',' '+17,' '+14,"Code: Flewww"
         dc.b    0
 
