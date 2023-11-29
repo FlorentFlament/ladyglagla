@@ -84,7 +84,7 @@ main:
         trap    #14             ; Call XBIOS
         addq.l  #2,sp
         move.l  d0,current_screen           ; Save physical screen ram base in current_screen
-        move.l  current_screen,a4           ; and a4
+        move.l  current_screen,a4           ; and a4 - used by some old routines
 
         ;; Initialize beat reference (used to synchronize parts)
         move.w  #0,d7

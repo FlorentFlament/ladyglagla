@@ -64,7 +64,6 @@ picdisplay:
         rts
 
 ;;; Erases the screen
-;;; (a4) address of video memory <- don't use this
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase_bottomup:
         movem.l a6/d0/d3,-(sp)
@@ -88,7 +87,6 @@ picerase_bottomup:
         rts
 
 ;;; Erases the screen from top to bottom
-;;; (a4) address of video memory <- don´t use this
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase_topdown:
         movem.l a4/a6/d0/d3,-(sp)
@@ -114,7 +112,6 @@ picerase_topdown:
         rts
 
 ;;; Erases the screen from left to right
-;;; (a4) address of video memory <- don't use this
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase_leftright:
         movem.l a4/a6/d0/d3,-(sp)
@@ -140,7 +137,6 @@ picerase_leftright:
         rts
 
 ;;; Erases the screen from right to left
-;;; (a4) address of video memory <- don´t use this
 ;;; d4 and d5 are the 2 longs to be used as erase colors
 picerase_rightleft:
         movem.l a4/a6/d0/d3,-(sp)
@@ -164,7 +160,6 @@ picerase_rightleft:
         rts
 
 ;;; a3 address of picture (prefixed by palette)
-;;; (a4) address of video ram <- not using anymore
 picdisplay2:
         move.l  a3,-(sp)
 
@@ -265,7 +260,6 @@ memcopy_16k:
         rts
 
 ;;; arguments:
-;;; (a4) address of picture <- not used anymore
 clear_screen:
         move.l  d4,-(sp)
         move.l  shadow_screen,a4 ; clear shadow screen
