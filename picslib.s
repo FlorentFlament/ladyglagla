@@ -1,6 +1,5 @@
 ;;; Basic picture display subroutines
         xref wait_hz_200
-        xref transition
 
         xdef picdisplay2
         xdef picerase_bottomup
@@ -13,8 +12,9 @@
         xdef memcopy_16k
         xdef clear_screen
         xdef switch_screen_buffers
-
-        xdef set_palette_col_sup
+        xdef set_screen_notos
+        xdef save_palette
+        xdef save_palette_sup
 
 ;;; Address of palette is: 0xffff8240 - 16 words
 ;;; https://freemint.github.io/tos.hyp/en/bios_sysvars.html
@@ -131,7 +131,8 @@ picdisplay2:
         jsr     movepic_16colors
 
         move.l  (sp)+,a3
-        jsr     transition
+        jsr     set_palette
+        jsr     switch_screen_buffers
         rts
 
 ;;; Set picture palette
@@ -237,22 +238,46 @@ set_screen_sup:
         move.l  a4,$45e         ; screenpt
         rts
 
+;;; a4 new screen address (to be set)
+set_screen_notos:
+        movem.l d0-d2/a0-a2,-(sp)
+        pea     set_screen_sup
+        move.w  #38,-(sp)    ; Supexec function call
+        trap    #14          ; Call XBIOS
+        addq.l  #6,sp        ; Correct stack
+        movem.l (sp)+,d0-d2/a0-a2
+        rts
+
 ;;; Switches current_screen and shadow_screen pointers
 ;;; Set Screen Physical Address to new current_screen
 ;;; Set new current_screen in a4 (for old routines still using this)
 switch_screen_buffers:
-        movem.l d0-d2/a0-a2,-(sp)
-
         ;; Switch current_screen with shadow_screen
         ;; At the end the new current_screen is also in a4
         move.l  shadow_screen,a4
         move.l  current_screen,shadow_screen
         move.l  a4,current_screen
+        jsr     set_screen_notos
+        rts
 
-        pea     set_screen_sup
+;;; a3 - address where palette should be saved
+save_palette_sup:
+        movem.l d0/a1,-(sp)
+        lea.l   PALETTE_ADDRESS,a1
+        move.w  #28,d0
+        .loop:
+        move.l  (a1,d0),(a3,d0)
+        subq.w  #4,d0
+        bpl     .loop
+        movem.l (sp)+,d0/a1
+        rts
+
+;;; a3 - address where palette should be saved
+save_palette:
+        movem.l d0-d2/a0-a2,-(sp)
+        pea     save_palette_sup
         move.w  #38,-(sp)    ; Supexec function call
         trap    #14          ; Call XBIOS
         addq.l  #6,sp        ; Correct stack
-
         movem.l (sp)+,d0-d2/a0-a2
         rts

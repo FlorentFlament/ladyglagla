@@ -31,6 +31,7 @@
         xref picerase_leftright
         xref picerase_rightleft
         xref textwriter
+        xref save_palette
 
         xref wait_hz_200
         xref wait_next_pattern
@@ -53,12 +54,23 @@ main:
         movem.l d0-d7/a0-a6,-(sp)
         move.l  sp,stackpointer_backup
 
+        lea.l   palette_backup,a3
+        jsr     save_palette
+
         sub.l   #32000,sp       ; allocate some room for screen buffer
         move.l  sp,d0
-        and.l  #$ffffff00,d0
+        and.l   #$ffffff00,d0
         move.l  d0,sp   ; align sp to 256 bytes
         move.l  sp,shadow_screen ; save screenbuffer pointer
         ;; From here stack can be used as usual
+
+        ;; Get address of current video memory
+        move.w  #2,-(sp)        ; Physbase function call
+        trap    #14             ; Call XBIOS
+        addq.l  #2,sp
+        move.l  d0,screen_backup  ; Save physical screen ram base in screen_backup
+        move.l  d0,current_screen ; Save physical screen ram base in current_screen
+        move.l  d0,a4             ; and a4 - used by some old routines
 
         ;; Hide mouse with a line A function
         dc.w    $A00A
@@ -76,14 +88,6 @@ main:
         move.w    #38,-(sp)    ; Supexec function call
         trap      #14          ; Call XBIOS
         addq.l    #6,sp        ; Correct stack
-
-        ;; Animation block
-        ;; Get address of video memory
-        move.w  #2,-(sp)        ; Physbase function call
-        trap    #14             ; Call XBIOS
-        addq.l  #2,sp
-        move.l  d0,current_screen           ; Save physical screen ram base in current_screen
-        move.l  current_screen,a4           ; and a4 - used by some old routines
 
         ;; Initialize beat reference (used to synchronize parts)
         move.w  #0,d7
@@ -304,9 +308,17 @@ main:
         jsr     wait_next_pattern
         lea.l   glagla07,a3
         jsr     picdisplay2
+        add.w   #8,d7
+        jsr     spinlock_beat_count
 
-        .final_loop:
-        bra     .final_loop
+        lea     text_end,a3
+        move.w  #8,d3
+        jsr     textwriter
+
+        ;; Wait for any key
+	move.w	#8,-(sp)	;Cnecin
+	trap	#1		;GEMDOS
+	addq.l	#2,sp
 
         move.w  #30,d4
         move.w  #COLOR4,d5
@@ -320,6 +332,16 @@ main:
         move.w    #38,-(sp)    ; Supexec function call
         trap      #14          ; Call XBIOS
         addq.l    #6,sp        ; Correct stack
+
+        jsr     turn_off_sound
+
+        ;; Restore original palette
+        lea.l   palette_backup,a3
+        jsr     set_palette
+
+        ;;  Restore original screen memory
+        move.l  screen_backup,a4
+        jsr     set_screen_notos
 
         ;; Display mouse with a line A function
         dc.w    $A009
@@ -483,6 +505,11 @@ text_greetz:
         dc.b    $1b,'Y',' '+3,' '+32,"X-men",0
         dc.b    0
 
+text_end:
+        dc.b    $1b,'c',' '+1       ; set background color to black
+        dc.b    $1b,'b',' '+0       ; set foreground color to white
+        dc.b    $1b,'Y',' '+22,' '+10,"Press any key to quit",0
+
         align   1               ; Word alignment required
 animation_data:
         dc.l    0               ; to be updated at runtime
@@ -493,7 +520,9 @@ animation_data:
         dc.l    animation_pic5
 
         section bss
+palette_backup:         dcb.w   16
 stackpointer_backup:    dcb.l   1
+screen_backup:          dcb.l   1
 shadow_screen:          dcb.l   1
 current_screen:         dcb.l   1
 

@@ -89,7 +89,8 @@ animation:
         jsr     draw_pic
 
         move.l  (a5),a3         ; palette
-        jsr     transition
+        jsr     set_palette
+        jsr     switch_screen_buffers
 
         jsr     draw_char       ; Actually better after transitioning
         ;; though it doesn't really matter since first character are
