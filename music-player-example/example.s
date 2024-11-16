@@ -49,7 +49,7 @@ old_vbl=*+2
     data
 
 tune:
-    include "pachelbel-fixed.s"
+    include "pachelbel.s"
     even
 tune_end:
 
